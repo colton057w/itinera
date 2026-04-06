@@ -22,6 +22,11 @@ export default async function Home({
   const durationMin = sp.durationMin ? Number.parseInt(sp.durationMin, 10) : null;
   const durationMax = sp.durationMax ? Number.parseInt(sp.durationMax, 10) : null;
 
+  const onVercel = process.env.VERCEL === "1";
+  const databaseUrl = process.env.DATABASE_URL ?? "";
+  const databaseUrlLooksLocal =
+    databaseUrl.length > 0 && /localhost|127\.0\.0\.1/i.test(databaseUrl);
+
   const { items, databaseAvailable } = await queryFeed({
     vibe: vibe ?? null,
     location: location ?? null,
@@ -116,26 +121,61 @@ export default async function Home({
           role="alert"
         >
           <p className="font-semibold">Database not reachable</p>
-          <p className="mt-1 text-amber-900 dark:text-amber-200/90">
-            PostgreSQL is not running on{" "}
-            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">localhost:5432</code>.
-            Start it, then run migrations:
-          </p>
-          <ol className="mt-2 list-inside list-decimal space-y-1 text-amber-900 dark:text-amber-200/90">
-            <li>
-              In this project folder:{" "}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">docker compose up -d</code>
-            </li>
-            <li>
-              Then:{" "}
-              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">npx prisma migrate deploy</code>
-            </li>
-          </ol>
-          <p className="mt-2 text-amber-900 dark:text-amber-200/90">
-            Or set <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code> in{" "}
-            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">.env</code> to your Postgres
-            instance.
-          </p>
+          {onVercel ? (
+            <>
+              <p className="mt-1 text-amber-900 dark:text-amber-200/90">
+                This is the deployed app on Vercel. It cannot use{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">localhost</code> — there is
+                no database on the server. In{" "}
+                <strong className="font-medium">Vercel → Project → Settings → Environment Variables</strong>,
+                set <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code> to your
+                Neon connection string (host looks like{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">ep-….neon.tech</code>), for{" "}
+                <strong className="font-medium">Production</strong> and{" "}
+                <strong className="font-medium">Preview</strong> if you use preview URLs. Then click{" "}
+                <strong className="font-medium">Redeploy</strong>. From your PC, run{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">npx prisma migrate deploy</code>{" "}
+                once with that same URL.
+              </p>
+              {databaseUrlLooksLocal ? (
+                <p className="mt-2 font-medium text-amber-950 dark:text-amber-50">
+                  Your Vercel <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code>{" "}
+                  still mentions localhost or 127.0.0.1 — replace it with the full URI from the Neon dashboard
+                  (not your laptop).
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-amber-900 dark:text-amber-200/90">
+                The app could not open a Postgres connection (often{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">localhost:5432</code>). If
+                Docker is already running, try stopping and restarting{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">npm run dev</code> so it picks
+                up the database, and use{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">127.0.0.1</code> instead of{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">localhost</code> in{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code> on Windows.
+              </p>
+              <ol className="mt-2 list-inside list-decimal space-y-1 text-amber-900 dark:text-amber-200/90">
+                <li>
+                  In this project folder:{" "}
+                  <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">docker compose up -d</code>
+                </li>
+                <li>
+                  Then:{" "}
+                  <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">
+                    npx prisma migrate deploy
+                  </code>
+                </li>
+              </ol>
+              <p className="mt-2 text-amber-900 dark:text-amber-200/90">
+                Or point <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code> in{" "}
+                <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">.env</code> at your Postgres
+                instance.
+              </p>
+            </>
+          )}
         </div>
       ) : null}
 
