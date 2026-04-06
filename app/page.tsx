@@ -1,65 +1,180 @@
-import Image from "next/image";
+import Link from "next/link";
+import { FeedCard } from "@/components/feed/FeedCard";
+import { queryFeed } from "@/lib/feed";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/session";
 
-export default function Home() {
+type Search = {
+  vibe?: string;
+  location?: string;
+  durationMin?: string;
+  durationMax?: string;
+};
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Search>;
+}) {
+  const sp = await searchParams;
+  const vibe = sp.vibe;
+  const location = sp.location;
+  const durationMin = sp.durationMin ? Number.parseInt(sp.durationMin, 10) : null;
+  const durationMax = sp.durationMax ? Number.parseInt(sp.durationMax, 10) : null;
+
+  const { items, databaseAvailable } = await queryFeed({
+    vibe: vibe ?? null,
+    location: location ?? null,
+    durationMin: durationMin && !Number.isNaN(durationMin) ? durationMin : null,
+    durationMax: durationMax && !Number.isNaN(durationMax) ? durationMax : null,
+  });
+
+  const session = await auth();
+  let voteMap = new Map<string, number>();
+  if (databaseAvailable && session?.user?.id && items.length > 0) {
+    const votes = await prisma.vote.findMany({
+      where: {
+        userId: session.user.id,
+        itineraryId: { in: items.map((i) => i.id) },
+      },
+    });
+    voteMap = new Map(votes.map((v) => [v.itineraryId, v.value]));
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="mx-auto max-w-3xl px-6 py-10">
+      <header className="mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-100">
+          Itinera
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-neutral-600 dark:text-zinc-400">
+          Discover and clone trip and wedding timelines — rehearsal dinners, flights, stays, and
+          day-by-day stories shared by real planners.
+        </p>
+      </header>
+
+      <form
+        className="mb-8 flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:flex-wrap sm:items-end"
+        action="/"
+        method="get"
+      >
+        <label className="flex min-w-[8rem] flex-1 flex-col gap-1">
+          <span className="text-xs font-medium text-neutral-500 dark:text-zinc-400">Vibe / tag</span>
+          <input
+            name="vibe"
+            defaultValue={vibe}
+            placeholder="luxury, backpacking…"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          />
+        </label>
+        <label className="flex min-w-[8rem] flex-1 flex-col gap-1">
+          <span className="text-xs font-medium text-neutral-500 dark:text-zinc-400">Location</span>
+          <input
+            name="location"
+            defaultValue={location}
+            placeholder="Italy, Napa…"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          />
+        </label>
+        <label className="flex w-24 flex-col gap-1">
+          <span className="text-xs font-medium text-neutral-500 dark:text-zinc-400">Min days</span>
+          <input
+            name="durationMin"
+            defaultValue={sp.durationMin}
+            type="number"
+            min={1}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+          />
+        </label>
+        <label className="flex w-24 flex-col gap-1">
+          <span className="text-xs font-medium text-neutral-500 dark:text-zinc-400">Max days</span>
+          <input
+            name="durationMax"
+            defaultValue={sp.durationMax}
+            type="number"
+            min={1}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+          />
+        </label>
+        <button
+          type="submit"
+          className="rounded-full bg-neutral-900 px-5 py-2 text-sm font-semibold text-white hover:bg-neutral-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+        >
+          Search
+        </button>
+        <Link
+          href="/"
+          className="text-center text-sm font-medium text-neutral-600 hover:underline dark:text-zinc-400 sm:ml-2"
+        >
+          Reset
+        </Link>
+      </form>
+
+      {!databaseAvailable ? (
+        <div
+          className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+          role="alert"
+        >
+          <p className="font-semibold">Database not reachable</p>
+          <p className="mt-1 text-amber-900 dark:text-amber-200/90">
+            PostgreSQL is not running on{" "}
+            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">localhost:5432</code>.
+            Start it, then run migrations:
+          </p>
+          <ol className="mt-2 list-inside list-decimal space-y-1 text-amber-900 dark:text-amber-200/90">
+            <li>
+              In this project folder:{" "}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">docker compose up -d</code>
+            </li>
+            <li>
+              Then:{" "}
+              <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">npx prisma migrate deploy</code>
+            </li>
+          </ol>
+          <p className="mt-2 text-amber-900 dark:text-amber-200/90">
+            Or set <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">DATABASE_URL</code> in{" "}
+            <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/60">.env</code> to your Postgres
+            instance.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      ) : null}
+
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-zinc-500">
+          Hot itineraries
+        </h2>
+        {databaseAvailable && items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-8 text-center text-sm text-neutral-600 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-400">
+            No public plans match yet.{" "}
+            <Link
+              href="/itineraries/new"
+              className="font-medium text-emerald-800 hover:underline dark:text-emerald-400"
+            >
+              Publish the first one
+            </Link>
+            .
+          </p>
+        ) : !databaseAvailable ? null : (
+          <ul className="space-y-3">
+            {items.map((item) => (
+              <li key={item.id}>
+                <FeedCard
+                  id={item.id}
+                  slug={item.slug}
+                  title={item.title}
+                  summary={item.summary}
+                  coverImageUrl={item.coverImageUrl}
+                  voteScore={item.voteScore}
+                  dayCount={item.dayCount}
+                  tags={item.tags}
+                  ownerName={item.owner.name}
+                  myVote={voteMap.get(item.id) ?? 0}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

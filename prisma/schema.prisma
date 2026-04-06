@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js models (Prisma adapter)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum EventType {
+  FLIGHT
+  HOTEL
+  ACTIVITY
+  MEAL
+  CUSTOM
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  accounts      Account[]
+  sessions      Session[]
+
+  itineraries Itinerary[]
+  votes       Vote[]
+  comments    Comment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Itinerary {
+  id            String      @id @default(cuid())
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title         String
+  slug          String      @unique
+  summary       String?
+  coverImageUrl String?
+  visibility    Visibility  @default(PUBLIC)
+
+  forkedFromId String?
+  forkedFrom   Itinerary?  @relation("ItineraryForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
+  forks        Itinerary[] @relation("ItineraryForks")
+  forkedAt     DateTime?
+
+  voteScore Int   @default(0)
+  hotScore  Float @default(0)
+
+  tags     ItineraryTag[]
+  days     Day[]
+  votes    Vote[]
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visibility, hotScore(sort: Desc)])
+  @@index([ownerId])
+}
+
+model Tag {
+  id    String         @id @default(cuid())
+  name  String         @unique
+  items ItineraryTag[]
+}
+
+model ItineraryTag {
+  itineraryId String
+  tagId       String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itineraryId, tagId])
+}
+
+model Day {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  dayIndex    Int
+  label       String?
+  date        DateTime?
+  events      Event[]
+
+  @@unique([itineraryId, dayIndex])
+  @@index([itineraryId])
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  dayId       String
+  day         Day       @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  eventIndex  Int
+  type        EventType
+  title       String
+  description String?
+  location    String?
+  lat         Float?
+  lng         Float?
+  startsAt    DateTime?
+  endsAt      DateTime?
+
+  coverImageUrl String?
+  media         EventMedia[]
+
+  /// Google Place ID (Places API) — opens correct Maps listing
+  googlePlaceId String?
+  /// Canonical Maps URL from Place Details (`url` field) — most reliable for "Open in Maps"
+  googleMapsUrl String?
+  /// Business website from Place Details when available
+  websiteUrl    String?
+
+  @@unique([dayId, eventIndex])
+  @@index([dayId])
+}
+
+model EventMedia {
+  id        String @id @default(cuid())
+  eventId   String
+  event     Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  url       String
+  width     Int?
+  height    Int?
+  sortOrder Int    @default(0)
+}
+
+model Vote {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  value       Int
+
+  @@unique([userId, itineraryId])
+}
+
+model Comment {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentThread")
+  body        String
+  createdAt   DateTime  @default(now())
+
+  @@index([itineraryId, createdAt])
+}
