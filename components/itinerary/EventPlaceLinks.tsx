@@ -1,4 +1,10 @@
 import type { EventType } from "@prisma/client";
+import {
+  buildGetYourGuideSearchUrl,
+  buildGoogleSearchUrl,
+  buildOpenTableSearchUrl,
+  looksNightlifeRelated,
+} from "@/lib/booking-links";
 import { mapsHrefForPlace, withHttps } from "@/lib/external-links";
 
 export function EventPlaceLinks({
@@ -33,8 +39,25 @@ export function EventPlaceLinks({
   const hasListedPlace = Boolean(
     googlePlaceId?.trim() || googleMapsUrl?.trim() || websiteUrl?.trim(),
   );
+  const query = [title.trim(), location?.trim() ?? ""].filter(Boolean).join(" ");
+  const nightlifeRelated = looksNightlifeRelated(title, location);
+  const reservationHref =
+    type === "MEAL" || nightlifeRelated
+      ? buildOpenTableSearchUrl(query || title.trim())
+      : null;
+  const activityBookingHref =
+    type === "ACTIVITY" && !nightlifeRelated
+      ? buildGetYourGuideSearchUrl(query || title.trim())
+      : null;
+  const genericBookingHref =
+    type === "CUSTOM"
+      ? buildGoogleSearchUrl(`${query || title.trim()} booking`)
+      : null;
+  const hasActionLinks = Boolean(
+    reservationHref || activityBookingHref || genericBookingHref,
+  );
 
-  if (!hasLinks && !location?.trim()) return null;
+  if (!hasLinks && !hasActionLinks && !location?.trim()) return null;
 
   const placeSectionLabel =
     type === "HOTEL" && (hasListedPlace || location?.trim())
@@ -53,8 +76,38 @@ export function EventPlaceLinks({
       {location?.trim() ? (
         <p className="text-sm text-neutral-800 dark:text-zinc-200">{location.trim()}</p>
       ) : null}
-      {hasLinks ? (
+      {hasLinks || hasActionLinks ? (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {reservationHref ? (
+            <a
+              href={reservationHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:decoration-emerald-800 dark:text-emerald-300"
+            >
+              {type === "MEAL" ? "Reserve table" : "Reserve nightlife spot"}
+            </a>
+          ) : null}
+          {activityBookingHref ? (
+            <a
+              href={activityBookingHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:decoration-emerald-800 dark:text-emerald-300"
+            >
+              Book activity tickets
+            </a>
+          ) : null}
+          {genericBookingHref ? (
+            <a
+              href={genericBookingHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:decoration-emerald-800 dark:text-emerald-300"
+            >
+              Find booking options
+            </a>
+          ) : null}
           {websiteUrl?.trim() ? (
             <a
               href={withHttps(websiteUrl)}

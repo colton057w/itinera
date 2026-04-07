@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 import { CommentsSection } from "@/components/feed/CommentsSection";
 import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { VoteControl } from "@/components/feed/VoteControl";
+import { OneClickBookingPanel } from "@/components/itinerary/OneClickBookingPanel";
 import { buildCommentTree } from "@/lib/comments";
 import { buildItineraryMapPoints } from "@/lib/buildItineraryMapPoints";
+import { buildOneClickBookingModel } from "@/lib/booking-links";
 import { highSpendEventIds } from "@/lib/budgetHighlights";
 import { formatMinorUnits } from "@/lib/formatMoney";
 import { prisma } from "@/lib/prisma";
@@ -172,6 +174,10 @@ export default async function ItineraryPage({
       dayLabel: day.label ?? `Day ${day.dayIndex + 1}`,
     })),
   );
+  const bookingModel = buildOneClickBookingModel({
+    itineraryTitle: it.title,
+    days: it.days,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -290,6 +296,7 @@ export default async function ItineraryPage({
           </>
         ) : null}
       </div>
+      <OneClickBookingPanel booking={bookingModel} />
 
       <ItineraryMapLayout points={mapPoints}>
         {it.days.map((day) => (
