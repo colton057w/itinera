@@ -268,7 +268,7 @@ function buildFlightDrafts(day: BookingDayInput): FlightDraft[] {
           ? "Launches directly into an itinerary-matched flight search."
           : "Opens a flexible flight search with the known airport details prefilled.";
 
-      return {
+      const draft: FlightDraft = {
         id: event.id,
         title: event.title,
         detail: routeLabel,
@@ -281,6 +281,7 @@ function buildFlightDrafts(day: BookingDayInput): FlightDraft[] {
         departDate,
         priceHint: null,
       };
+      return draft;
     })
     .filter((draft) => draft.links.length > 0);
 }
@@ -344,7 +345,7 @@ function buildStayItems(args: {
         mapsHref: buildMapsHref(event),
       });
 
-      return {
+      const item: BookingItem = {
         id: event.id,
         kind: "stay",
         title: event.title,
@@ -358,6 +359,7 @@ function buildStayItems(args: {
         priceHint: null,
         links,
       };
+      return item;
     })
     .filter((item) => item.links.length > 0);
 }
@@ -430,7 +432,7 @@ function buildVenueItems(day: BookingDayInput, partySize: number): BookingItem[]
         mapsHref: buildMapsHref(event),
       });
 
-      return {
+      const item: BookingItem = {
         id: event.id,
         kind: "venue",
         title: event.title,
@@ -444,6 +446,7 @@ function buildVenueItems(day: BookingDayInput, partySize: number): BookingItem[]
         priceHint: null,
         links,
       };
+      return item;
     })
     .filter((item) => item.links.length > 0);
 }
