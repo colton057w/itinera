@@ -16,12 +16,14 @@ import { isWeddingStyleTrip } from "@/lib/weddingItinerary";
 import { BudgetSummary } from "@/components/itinerary/BudgetSummary";
 import { CloneButton } from "@/components/itinerary/CloneButton";
 import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
+import { ExportToCalendarButton } from "@/components/itinerary/ExportToCalendarButton";
 import { ForkVariationsSection } from "@/components/itinerary/ForkVariationsSection";
 import { EventMapHighlight } from "@/components/itinerary/itinerary-map/EventMapHighlight";
 import { ItineraryMapLayout } from "@/components/itinerary/itinerary-map/ItineraryMapLayout";
 import { EventPlaceLinks } from "@/components/itinerary/EventPlaceLinks";
 import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
 import { StarRating } from "@/components/itinerary/StarRating";
+import type { ItineraryCalendarEvent } from "@/lib/itineraryToIcs";
 
 export async function generateMetadata({
   params,
@@ -157,6 +159,20 @@ export default async function ItineraryPage({
         (session.user.id === it.forkedFrom.ownerId ||
           session.user.id === it.ownerId)));
 
+  const exportEvents: ItineraryCalendarEvent[] = it.days.flatMap((day) =>
+    day.events.map((ev) => ({
+      id: ev.id,
+      title: ev.title,
+      description: ev.description,
+      location: ev.location,
+      startTime: ev.startsAt?.toISOString() ?? null,
+      endTime: ev.endsAt?.toISOString() ?? null,
+      dayDate: day.date?.toISOString() ?? null,
+      dayIndex: day.dayIndex,
+      dayLabel: day.label ?? `Day ${day.dayIndex + 1}`,
+    })),
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:items-start">
@@ -251,6 +267,7 @@ export default async function ItineraryPage({
           premiumCloneCurrency={it.premiumCloneCurrency}
           skipPremiumGate={session?.user?.id === it.ownerId}
         />
+        <ExportToCalendarButton itineraryTitle={it.title} events={exportEvents} />
         {guestPortalEligible ? (
           <Link
             href={`/itineraries/${it.slug}/guest`}
