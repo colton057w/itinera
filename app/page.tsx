@@ -63,7 +63,7 @@ export default async function Home({
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-6xl px-6 py-10">
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-100">
           Itinera
@@ -243,9 +243,9 @@ export default async function Home({
             .
           </p>
         ) : !databaseAvailable ? null : (
-          <ul className="space-y-3">
+          <ul className="columns-1 [column-gap:0.9rem] sm:columns-2 xl:columns-3">
             {items.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="mb-4 break-inside-avoid">
                 <FeedCard
                   id={item.id}
                   slug={item.slug}

@@ -2,52 +2,39 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { VoteControl } from "@/components/feed/VoteControl";
 import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
 
-function PolaroidFan({ urls }: { urls: string[] }) {
-  const u = urls.filter(Boolean).slice(0, 3);
-  if (u.length === 0) return null;
+function scorePhotoQuality(url: string | null): number {
+  if (!url) return 0;
+  try {
+    const parsed = new URL(url);
+    const width = Number(parsed.searchParams.get("w") ?? "0");
+    const quality = Number(parsed.searchParams.get("q") ?? "0");
+    let score = parsed.hostname.includes("unsplash") ? 1 : 0;
+    if (width >= 1200) score += 2;
+    else if (width >= 900) score += 1;
+    if (quality >= 85) score += 1;
+    return score;
+  } catch {
+    return 1;
+  }
+}
 
-  return (
-    <motion.div
-      className="relative h-[7.25rem] w-[6.75rem] shrink-0 touch-manipulation"
-      initial="rest"
-      whileHover="hover"
-      variants={{
-        rest: {},
-        hover: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
-      }}
-    >
-      {u.map((url, i) => (
-        <motion.div
-          key={`${url}-${i}`}
-          variants={{
-            rest: {
-              rotate: -8 + i * 8,
-              x: -8 + i * 8,
-              y: i * 3,
-              scale: 1,
-              zIndex: i,
-            },
-            hover: {
-              rotate: -20 + i * 20,
-              x: -18 + i * 26,
-              y: -12,
-              scale: 1.05,
-              zIndex: i === 1 ? 4 : i === 0 ? 3 : 2,
-            },
-          }}
-          transition={{ type: "spring", stiffness: 420, damping: 30 }}
-          className="absolute bottom-0 left-1/2 -ml-[2.25rem] h-[5.75rem] w-[4.5rem] overflow-hidden rounded-[2px] border-[5px] border-white bg-white shadow-[0_10px_28px_rgba(0,0,0,0.16)] dark:border-zinc-100 dark:shadow-[0_10px_28px_rgba(0,0,0,0.5)]"
-        >
-          <Image src={url} alt="" fill sizes="72px" className="object-cover" />
-        </motion.div>
-      ))}
-    </motion.div>
+function mediaHeightClass(hasPhoto: boolean, qualityScore: number): string {
+  if (!hasPhoto) return "h-56 sm:h-60";
+  if (qualityScore >= 3) return "h-72 sm:h-80";
+  if (qualityScore >= 2) return "h-64 sm:h-72";
+  return "h-60 sm:h-64";
+}
+
+function pickBestPhoto(coverImageUrl: string | null, previewUrls: string[]): string | null {
+  const candidates = [coverImageUrl, ...previewUrls].filter(
+    (url): url is string => typeof url === "string" && url.length > 0
   );
+  if (candidates.length === 0) return null;
+  return [...candidates].sort((a, b) => scorePhotoQuality(b) - scorePhotoQuality(a))[0] ?? null;
 }
 
 export function FeedCard(props: {
@@ -64,27 +51,22 @@ export function FeedCard(props: {
   myStarred: boolean;
   previewUrls: string[];
 }) {
-  const stackUrls =
-    props.previewUrls.length > 0
-      ? props.previewUrls
-      : props.coverImageUrl
-        ? [props.coverImageUrl]
-        : [];
+  const primaryImage = pickBestPhoto(props.coverImageUrl, props.previewUrls);
+  const qualityScore = scorePhotoQuality(primaryImage);
+  const mediaHeight = mediaHeightClass(Boolean(primaryImage), qualityScore);
 
   return (
-    <article className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-      <VoteControl
-        itineraryId={props.id}
-        initialScore={props.voteScore}
-        initialMyVote={props.myVote}
-      />
-      <div className="flex shrink-0 flex-col justify-start pt-0.5">
-        <ItineraryStarButton itineraryId={props.id} initialStarred={props.myStarred} />
-      </div>
-      <Link href={`/itineraries/${props.slug}`} className="min-w-0 flex-1">
-        <div className="flex gap-3">
-          {stackUrls.length > 0 ? (
-            <PolaroidFan urls={stackUrls} />
+    <article className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/95 dark:hover:border-zinc-700">
+      <Link href={`/itineraries/${props.slug}`} className="block">
+        <div className={`relative overflow-hidden ${mediaHeight}`}>
+          {primaryImage ? (
+            <Image
+              src={primaryImage}
+              alt=""
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            />
           ) : (
             <TripCoverVisual
               variant="feed"
@@ -92,25 +74,23 @@ export function FeedCard(props: {
               title={props.title}
               summary={props.summary}
               tags={props.tags}
+              className="!h-full !w-full !rounded-none"
             />
           )}
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-neutral-900 hover:underline dark:text-zinc-100">
-              {props.title}
-            </h2>
-            <p className="mt-0.5 text-xs text-neutral-500 dark:text-zinc-400">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-xl border border-white/30 bg-white/16 p-3 text-white shadow-[0_8px_24px_rgba(0,0,0,0.24)] backdrop-blur-md dark:border-white/20 dark:bg-zinc-900/40">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80">
               {props.dayCount} days · {props.ownerName ?? "Planner"}
             </p>
+            <h2 className="mt-1 line-clamp-2 text-base font-semibold leading-tight">{props.title}</h2>
             {props.summary ? (
-              <p className="mt-1 line-clamp-2 text-sm text-neutral-600 dark:text-zinc-400">
-                {props.summary}
-              </p>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/85">{props.summary}</p>
             ) : null}
-            <div className="mt-2 flex flex-wrap gap-1">
-              {props.tags.slice(0, 6).map((t) => (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {props.tags.slice(0, 4).map((t) => (
                 <span
                   key={t}
-                  className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                  className="rounded-full border border-white/35 bg-white/20 px-2 py-0.5 text-[10px] text-white/95"
                 >
                   #{t}
                 </span>
@@ -119,6 +99,16 @@ export function FeedCard(props: {
           </div>
         </div>
       </Link>
+      <div className="flex items-center justify-between gap-3 p-3">
+        <VoteControl
+          itineraryId={props.id}
+          initialScore={props.voteScore}
+          initialMyVote={props.myVote}
+        />
+        <div className="shrink-0">
+          <ItineraryStarButton itineraryId={props.id} initialStarred={props.myStarred} />
+        </div>
+      </div>
     </article>
   );
 }
