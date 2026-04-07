@@ -103,6 +103,12 @@ export async function POST(
                   websiteUrl: ev.websiteUrl,
                   startsAt: ev.startsAt,
                   endsAt: ev.endsAt,
+                  ratingStars: ev.ratingStars,
+                  airline: ev.airline,
+                  departureAirportCode: ev.departureAirportCode,
+                  arrivalAirportCode: ev.arrivalAirportCode,
+                  departureAirportName: ev.departureAirportName,
+                  arrivalAirportName: ev.arrivalAirportName,
                   coverImageUrl: ev.coverImageUrl,
                   media: {
                     create: ev.media.map((m) => ({

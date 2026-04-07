@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 import { CloneButton } from "@/components/itinerary/CloneButton";
 import { EventPlaceLinks } from "@/components/itinerary/EventPlaceLinks";
+import { StarRating } from "@/components/itinerary/StarRating";
 
 export async function generateMetadata({
   params,
@@ -216,6 +217,67 @@ export default async function ItineraryPage({
                         lat={ev.lat}
                         lng={ev.lng}
                       />
+                      {ev.type === "FLIGHT" &&
+                      (ev.departureAirportCode ||
+                        ev.arrivalAirportCode ||
+                        ev.airline ||
+                        ev.startsAt ||
+                        ev.endsAt) ? (
+                        <div className="mt-3 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2.5 text-sm text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-100">
+                          {ev.airline ? (
+                            <p className="font-medium text-sky-900 dark:text-sky-200">{ev.airline}</p>
+                          ) : null}
+                          {(ev.departureAirportCode || ev.arrivalAirportCode) && (
+                            <p className="mt-1 font-mono text-base font-semibold tracking-wide">
+                              {ev.departureAirportCode ?? "—"}
+                              {ev.departureAirportName ? (
+                                <span className="ml-1 font-sans text-sm font-normal text-sky-800 dark:text-sky-300">
+                                  ({ev.departureAirportName})
+                                </span>
+                              ) : null}
+                              <span className="mx-2 text-sky-600 dark:text-sky-400">→</span>
+                              {ev.arrivalAirportCode ?? "—"}
+                              {ev.arrivalAirportName ? (
+                                <span className="ml-1 font-sans text-sm font-normal text-sky-800 dark:text-sky-300">
+                                  ({ev.arrivalAirportName})
+                                </span>
+                              ) : null}
+                            </p>
+                          )}
+                          {(ev.startsAt || ev.endsAt) && (
+                            <p className="mt-2 text-xs text-sky-800 dark:text-sky-300">
+                              {ev.startsAt ? (
+                                <>
+                                  <span className="font-medium">Departs:</span>{" "}
+                                  {ev.startsAt.toLocaleString(undefined, {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  })}
+                                </>
+                              ) : null}
+                              {ev.startsAt && ev.endsAt ? " · " : null}
+                              {ev.endsAt ? (
+                                <>
+                                  <span className="font-medium">Arrives:</span>{" "}
+                                  {ev.endsAt.toLocaleString(undefined, {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  })}
+                                </>
+                              ) : null}
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+                      {ev.ratingStars != null && ev.ratingStars >= 1 && ev.ratingStars <= 5 ? (
+                        <div className="mt-2">
+                          <StarRating
+                            value={ev.ratingStars}
+                            readOnly
+                            label="Planner rating"
+                          />
+                        </div>
+                      ) : null}
                       {ev.description ? (
                         <p className="mt-2 text-sm leading-relaxed text-neutral-700 dark:text-zinc-300">
                           {ev.description}

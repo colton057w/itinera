@@ -19,7 +19,36 @@ type EventInput = {
   websiteUrl?: string | null;
   lat?: number | null;
   lng?: number | null;
+  ratingStars?: number | null;
+  airline?: string | null;
+  departureAirportCode?: string | null;
+  arrivalAirportCode?: string | null;
+  departureAirportName?: string | null;
+  arrivalAirportName?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
 };
+
+function parseRatingStars(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(n)) return null;
+  const i = Math.trunc(n);
+  if (i < 1 || i > 5) throw new Error("ratingStars must be between 1 and 5");
+  return i;
+}
+
+function normIata(raw: string | null | undefined): string | null {
+  const t = raw?.trim().toUpperCase().replace(/[^A-Z]/g, "");
+  if (!t) return null;
+  return t.length <= 3 ? t : t.slice(0, 3);
+}
+
+function parseIsoDate(raw: string | null | undefined): Date | null {
+  if (!raw?.trim()) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 type DayInput = {
   dayIndex: number;
@@ -125,6 +154,8 @@ export async function POST(req: Request) {
                   }
                   const t = ev.title?.trim();
                   if (!t) throw new Error("Each event needs a title");
+                  const isFlight = ev.type === "FLIGHT";
+                  const ratingStars = parseRatingStars(ev.ratingStars);
                   const media = ev.coverImageUrl
                     ? {
                         create: [{ url: ev.coverImageUrl, sortOrder: 0 }],
@@ -142,6 +173,20 @@ export async function POST(req: Request) {
                     websiteUrl: ev.websiteUrl?.trim() || null,
                     lat: ev.lat ?? null,
                     lng: ev.lng ?? null,
+                    ratingStars,
+                    airline: isFlight ? ev.airline?.trim() || null : null,
+                    departureAirportCode: isFlight
+                      ? normIata(ev.departureAirportCode)
+                      : null,
+                    arrivalAirportCode: isFlight ? normIata(ev.arrivalAirportCode) : null,
+                    departureAirportName: isFlight
+                      ? ev.departureAirportName?.trim() || null
+                      : null,
+                    arrivalAirportName: isFlight
+                      ? ev.arrivalAirportName?.trim() || null
+                      : null,
+                    startsAt: isFlight ? parseIsoDate(ev.startsAt) : null,
+                    endsAt: isFlight ? parseIsoDate(ev.endsAt) : null,
                     media,
                   };
                 }),

@@ -145,6 +145,16 @@ model Event {
   startsAt    DateTime?
   endsAt      DateTime?
 
+  /// 1–5 stars, optional — planner’s rating for this stop
+  ratingStars Int?
+
+  /// Flight-specific (optional when type is FLIGHT)
+  airline               String?
+  departureAirportCode  String?
+  arrivalAirportCode    String?
+  departureAirportName  String?
+  arrivalAirportName    String?
+
   coverImageUrl String?
   media         EventMedia[]
 

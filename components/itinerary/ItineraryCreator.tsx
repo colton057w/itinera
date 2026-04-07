@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AirportCombobox } from "@/components/itinerary/AirportCombobox";
 import { HotelPlaceInput } from "@/components/itinerary/HotelPlaceInput";
+import { StarRating } from "@/components/itinerary/StarRating";
+import { AIRLINE_SUGGESTIONS } from "@/lib/airlines";
 
 type EventDraft = {
   clientId: string;
@@ -16,6 +19,14 @@ type EventDraft = {
   websiteUrl?: string;
   lat?: number;
   lng?: number;
+  ratingStars: number | null;
+  airline: string;
+  departureAirportCode: string;
+  departureAirportName: string;
+  arrivalAirportCode: string;
+  arrivalAirportName: string;
+  departureAt: string;
+  arrivalAt: string;
 };
 
 type DayDraft = {
@@ -73,6 +84,14 @@ export function ItineraryCreator() {
                   title: "",
                   description: "",
                   location: "",
+                  ratingStars: null,
+                  airline: "",
+                  departureAirportCode: "",
+                  departureAirportName: "",
+                  arrivalAirportCode: "",
+                  arrivalAirportName: "",
+                  departureAt: "",
+                  arrivalAt: "",
                 },
               ],
             }
@@ -147,19 +166,46 @@ export function ItineraryCreator() {
           dayIndex,
           label: day.label || null,
           date: day.date ? new Date(day.date).toISOString() : null,
-          events: day.events.map((ev, eventIndex) => ({
-            eventIndex,
-            type: ev.type,
-            title: ev.title.trim() || "Untitled",
-            description: ev.description || null,
-            location: ev.location || null,
-            coverImageUrl: ev.coverImageUrl || null,
-            googlePlaceId: ev.googlePlaceId || null,
-            googleMapsUrl: ev.googleMapsUrl || null,
-            websiteUrl: ev.websiteUrl || null,
-            lat: ev.lat ?? null,
-            lng: ev.lng ?? null,
-          })),
+          events: day.events.map((ev, eventIndex) => {
+            const flightTitle =
+              ev.type === "FLIGHT" &&
+              ev.departureAirportCode &&
+              ev.arrivalAirportCode &&
+              !ev.title.trim()
+                ? `${ev.departureAirportCode} → ${ev.arrivalAirportCode}`
+                : ev.title.trim() || "Untitled";
+            return {
+              eventIndex,
+              type: ev.type,
+              title: flightTitle,
+              description: ev.description || null,
+              location: ev.location || null,
+              coverImageUrl: ev.coverImageUrl || null,
+              googlePlaceId: ev.googlePlaceId || null,
+              googleMapsUrl: ev.googleMapsUrl || null,
+              websiteUrl: ev.websiteUrl || null,
+              lat: ev.lat ?? null,
+              lng: ev.lng ?? null,
+              ratingStars: ev.ratingStars,
+              airline: ev.type === "FLIGHT" ? ev.airline.trim() || null : null,
+              departureAirportCode:
+                ev.type === "FLIGHT" ? ev.departureAirportCode.trim() || null : null,
+              arrivalAirportCode:
+                ev.type === "FLIGHT" ? ev.arrivalAirportCode.trim() || null : null,
+              departureAirportName:
+                ev.type === "FLIGHT" ? ev.departureAirportName.trim() || null : null,
+              arrivalAirportName:
+                ev.type === "FLIGHT" ? ev.arrivalAirportName.trim() || null : null,
+              startsAt:
+                ev.type === "FLIGHT" && ev.departureAt
+                  ? new Date(ev.departureAt).toISOString()
+                  : null,
+              endsAt:
+                ev.type === "FLIGHT" && ev.arrivalAt
+                  ? new Date(ev.arrivalAt).toISOString()
+                  : null,
+            };
+          }),
         })),
       };
 
@@ -322,18 +368,24 @@ export function ItineraryCreator() {
                           value={ev.type}
                           onChange={(e) => {
                             const next = e.target.value as EventDraft["type"];
-                            updateEvent(day.clientId, ev.clientId, {
-                              type: next,
-                              ...(next !== "HOTEL"
-                                ? {
-                                    googlePlaceId: undefined,
-                                    googleMapsUrl: undefined,
-                                    websiteUrl: undefined,
-                                    lat: undefined,
-                                    lng: undefined,
-                                  }
-                                : {}),
-                            });
+                            const patch: Partial<EventDraft> = { type: next };
+                            if (next !== "HOTEL") {
+                              patch.googlePlaceId = undefined;
+                              patch.googleMapsUrl = undefined;
+                              patch.websiteUrl = undefined;
+                              patch.lat = undefined;
+                              patch.lng = undefined;
+                            }
+                            if (next !== "FLIGHT") {
+                              patch.airline = "";
+                              patch.departureAirportCode = "";
+                              patch.departureAirportName = "";
+                              patch.arrivalAirportCode = "";
+                              patch.arrivalAirportName = "";
+                              patch.departureAt = "";
+                              patch.arrivalAt = "";
+                            }
+                            updateEvent(day.clientId, ev.clientId, patch);
                           }}
                         >
                           <option value="FLIGHT">Flight</option>
@@ -359,9 +411,94 @@ export function ItineraryCreator() {
                           }
                         />
                       ) : null}
+                      {ev.type === "FLIGHT" ? (
+                        <div className="space-y-3 md:col-span-2">
+                          <label className="block space-y-1">
+                            <span className="text-xs text-neutral-500 dark:text-zinc-400">
+                              Airline
+                            </span>
+                            <input
+                              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                              list={`airlines-${ev.clientId}`}
+                              value={ev.airline}
+                              onChange={(e) =>
+                                updateEvent(day.clientId, ev.clientId, {
+                                  airline: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. Delta Air Lines"
+                            />
+                            <datalist id={`airlines-${ev.clientId}`}>
+                              {AIRLINE_SUGGESTIONS.map((a) => (
+                                <option key={a} value={a} />
+                              ))}
+                            </datalist>
+                          </label>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <AirportCombobox
+                              label="From (departure airport)"
+                              code={ev.departureAirportCode}
+                              name={ev.departureAirportName}
+                              onChange={({ code, name }) =>
+                                updateEvent(day.clientId, ev.clientId, {
+                                  departureAirportCode: code,
+                                  departureAirportName: name,
+                                })
+                              }
+                            />
+                            <AirportCombobox
+                              label="To (arrival airport)"
+                              code={ev.arrivalAirportCode}
+                              name={ev.arrivalAirportName}
+                              onChange={({ code, name }) =>
+                                updateEvent(day.clientId, ev.clientId, {
+                                  arrivalAirportCode: code,
+                                  arrivalAirportName: name,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <label className="space-y-1">
+                              <span className="text-xs text-neutral-500 dark:text-zinc-400">
+                                Departure (local date and time)
+                              </span>
+                              <input
+                                type="datetime-local"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                                value={ev.departureAt}
+                                onChange={(e) =>
+                                  updateEvent(day.clientId, ev.clientId, {
+                                    departureAt: e.target.value,
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="text-xs text-neutral-500 dark:text-zinc-400">
+                                Arrival (local date and time)
+                              </span>
+                              <input
+                                type="datetime-local"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                                value={ev.arrivalAt}
+                                onChange={(e) =>
+                                  updateEvent(day.clientId, ev.clientId, {
+                                    arrivalAt: e.target.value,
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ) : null}
                       <label className="space-y-1 md:col-span-2">
                         <span className="text-xs text-neutral-500 dark:text-zinc-400">
-                          {ev.type === "HOTEL" ? "Hotel name" : "Title"}
+                          {ev.type === "HOTEL"
+                            ? "Hotel name"
+                            : ev.type === "FLIGHT"
+                              ? "Title (optional — defaults to route)"
+                              : "Title"}
                         </span>
                         <input
                           className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
@@ -372,7 +509,9 @@ export function ItineraryCreator() {
                           placeholder={
                             ev.type === "HOTEL"
                               ? "Filled when you pick a place — edit anytime"
-                              : "Rehearsal dinner at Villa Maria"
+                              : ev.type === "FLIGHT"
+                                ? "e.g. DL 1234 or leave blank for LAX → JFK"
+                                : "Rehearsal dinner at Villa Maria"
                           }
                         />
                       </label>
@@ -393,6 +532,14 @@ export function ItineraryCreator() {
                           }
                         />
                       </label>
+                      <div className="md:col-span-2">
+                        <StarRating
+                          value={ev.ratingStars}
+                          onChange={(ratingStars) =>
+                            updateEvent(day.clientId, ev.clientId, { ratingStars })
+                          }
+                        />
+                      </div>
                       <label className="space-y-1 md:col-span-2">
                         <span className="text-xs text-neutral-500 dark:text-zinc-400">
                           Description
