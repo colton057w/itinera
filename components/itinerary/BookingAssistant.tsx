@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { BookingPlan } from "@/lib/booking-options";
 
 type Props = {
@@ -8,6 +8,7 @@ type Props = {
 };
 
 export function BookingAssistant({ itineraryId }: Props) {
+  const sectionRef = useRef<HTMLElement>(null);
   const [partySize, setPartySize] = useState(2);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,13 +48,25 @@ export function BookingAssistant({ itineraryId }: Props) {
 
   function openBookingStack() {
     if (!plan) return;
-    for (const link of plan.tripLinks) {
-      window.open(link.href, "_blank", "noopener,noreferrer");
+    const affiliateAnchors = sectionRef.current
+      ? Array.from(
+          sectionRef.current.querySelectorAll<HTMLAnchorElement>('a[data-booking-stack-link="true"]'),
+        )
+      : [];
+    const linksToOpen = affiliateAnchors.length
+      ? affiliateAnchors.map((anchor) => anchor.href)
+      : plan.tripLinks.map((link) => link.href);
+
+    for (const href of linksToOpen) {
+      window.open(href, "_blank", "noopener,noreferrer");
     }
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+    <section
+      ref={sectionRef}
+      className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+    >
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
@@ -111,6 +124,21 @@ export function BookingAssistant({ itineraryId }: Props) {
 
       {plan ? (
         <div className="mt-5 space-y-5">
+          {plan.tripLinks.length ? (
+            <div className="hidden" aria-hidden="true">
+              {plan.tripLinks.map((link, index) => (
+                <a
+                  key={`${link.href}-${index}`}
+                  data-booking-stack-link="true"
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600 dark:text-zinc-400">
             <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-neutral-800 dark:bg-zinc-800 dark:text-zinc-200">
               {summary || "Booking links ready"}

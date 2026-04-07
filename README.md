@@ -49,6 +49,8 @@ In **Vercel → Project → Settings → Environment Variables**, set:
 | `BLOB_READ_WRITE_TOKEN` | From Vercel Blob (step 2). |
 | `GOOGLE_PLACES_API_KEY` | Optional; enables place autocomplete (server). |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Optional; **Maps JavaScript API** for the itinerary trip map (client). Can match your Places project if both APIs are enabled. |
+| `TRAVELPAYOUTS_TOKEN` | Optional; enables Travelpayouts flight price lookups in the booking assistant. |
+| `TRAVELPAYOUTS_MARKER` | Optional; loads your Travelpayouts LinkSwitcher / Drive script so booking links open with your affiliate marker. |
 
 Redeploy after changing env vars.
 

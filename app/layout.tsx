@@ -7,14 +7,18 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const travelPayoutsDriveLoader = `
-  (function () {
-      var script = document.createElement("script");
-      script.async = 1;
-      script.src = 'https://emrldco.com/NTE2MDAx.js?t=516001';
-      document.head.appendChild(script);
-  })();
-`;
+function buildTravelPayoutsDriveLoader(marker: string): string {
+  const encodedMarker = Buffer.from(marker).toString("base64");
+  const scriptSrc = `https://emrldco.com/${encodedMarker}.js?t=${encodeURIComponent(marker)}`;
+  return `
+    (function () {
+        var script = document.createElement("script");
+        script.async = 1;
+        script.src = ${JSON.stringify(scriptSrc)};
+        document.head.appendChild(script);
+    })();
+  `;
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +40,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const travelPayoutsMarker = process.env.TRAVELPAYOUTS_MARKER?.trim();
+  const travelPayoutsDriveLoader = travelPayoutsMarker
+    ? buildTravelPayoutsDriveLoader(travelPayoutsMarker)
+    : null;
+
   return (
     <html
       lang="en"
@@ -68,17 +77,19 @@ export default function RootLayout({
           </header>
           <main className="flex-1">{children}</main>
         </Providers>
-        <Script
-          id="travelpayouts-drive"
-          strategy="afterInteractive"
-          data-noptimize="1"
-          data-cfasync="false"
-          data-wpfc-render="false"
-          seraph-accel-crit="1"
-          data-no-defer="1"
-        >
-          {travelPayoutsDriveLoader}
-        </Script>
+        {travelPayoutsDriveLoader ? (
+          <Script
+            id="travelpayouts-drive"
+            strategy="afterInteractive"
+            data-noptimize="1"
+            data-cfasync="false"
+            data-wpfc-render="false"
+            seraph-accel-crit="1"
+            data-no-defer="1"
+          >
+            {travelPayoutsDriveLoader}
+          </Script>
+        ) : null}
       </body>
     </html>
   );
