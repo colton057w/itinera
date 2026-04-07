@@ -14,6 +14,7 @@ import { auth } from "@/lib/session";
 import { venueClosureHint } from "@/lib/venueClosureHints";
 import { isWeddingStyleTrip } from "@/lib/weddingItinerary";
 import { BudgetSummary } from "@/components/itinerary/BudgetSummary";
+import { BookingAssistant } from "@/components/itinerary/BookingAssistant";
 import { CloneButton } from "@/components/itinerary/CloneButton";
 import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
 import { ExportToCalendarButton } from "@/components/itinerary/ExportToCalendarButton";
@@ -290,6 +291,8 @@ export default async function ItineraryPage({
           </>
         ) : null}
       </div>
+
+      <BookingAssistant itineraryId={it.id} />
 
       <ItineraryMapLayout points={mapPoints}>
         {it.days.map((day) => (
