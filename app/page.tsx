@@ -243,7 +243,7 @@ export default async function Home({
             .
           </p>
         ) : !databaseAvailable ? null : (
-          <ul className="columns-1 [column-gap:0.9rem] sm:columns-2 xl:columns-3">
+          <ul className="columns-1 gap-4 [column-gap:1rem] sm:columns-2 xl:columns-3">
             {items.map((item) => (
               <li key={item.id} className="mb-4 break-inside-avoid">
                 <FeedCard

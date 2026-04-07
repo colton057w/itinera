@@ -22,10 +22,11 @@ function scorePhotoQuality(url: string | null): number {
   }
 }
 
-function mediaHeightClass(hasPhoto: boolean, qualityScore: number): string {
+function mediaHeightClass(hasPhoto: boolean, qualityScore: number, summary: string | null): string {
+  const summaryLength = summary?.trim().length ?? 0;
   if (!hasPhoto) return "h-56 sm:h-60";
-  if (qualityScore >= 3) return "h-72 sm:h-80";
-  if (qualityScore >= 2) return "h-64 sm:h-72";
+  if (qualityScore >= 3) return summaryLength > 115 ? "h-80 sm:h-96" : "h-72 sm:h-80";
+  if (qualityScore >= 2) return summaryLength > 115 ? "h-72 sm:h-80" : "h-64 sm:h-72";
   return "h-60 sm:h-64";
 }
 
@@ -53,10 +54,10 @@ export function FeedCard(props: {
 }) {
   const primaryImage = pickBestPhoto(props.coverImageUrl, props.previewUrls);
   const qualityScore = scorePhotoQuality(primaryImage);
-  const mediaHeight = mediaHeightClass(Boolean(primaryImage), qualityScore);
+  const mediaHeight = mediaHeightClass(Boolean(primaryImage), qualityScore, props.summary);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/95 dark:hover:border-zinc-700">
+    <article className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white/95 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900/95 dark:hover:border-zinc-700">
       <Link href={`/itineraries/${props.slug}`} className="block">
         <div className={`relative overflow-hidden ${mediaHeight}`}>
           {primaryImage ? (
@@ -64,7 +65,7 @@ export function FeedCard(props: {
               src={primaryImage}
               alt=""
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              className="object-cover transition-transform duration-700 group-hover:scale-[1.07]"
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
             />
           ) : (
