@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 import { venueClosureHint } from "@/lib/venueClosureHints";
 import { isWeddingStyleTrip } from "@/lib/weddingItinerary";
+import { BookTripPanel } from "@/components/itinerary/BookTripPanel";
 import { BudgetSummary } from "@/components/itinerary/BudgetSummary";
 import { CloneButton } from "@/components/itinerary/CloneButton";
 import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
@@ -364,6 +365,11 @@ export default async function ItineraryPage({
                         websiteUrl={ev.websiteUrl}
                         lat={ev.lat}
                         lng={ev.lng}
+                        departureAirportCode={ev.departureAirportCode}
+                        arrivalAirportCode={ev.arrivalAirportCode}
+                        startsAt={ev.startsAt}
+                        endsAt={ev.endsAt}
+                        dayDate={day.date}
                       />
                       {ev.type === "FLIGHT" &&
                       (ev.departureAirportCode ||
@@ -468,6 +474,7 @@ export default async function ItineraryPage({
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <BookTripPanel days={it.days} />
           <BudgetSummary lines={budgetLines} />
           {it.visibility === Visibility.PUBLIC ? (
             <ForkVariationsSection itineraryId={it.id} />

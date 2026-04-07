@@ -1,5 +1,7 @@
 import type { EventType } from "@prisma/client";
+import { bookingLinkForEvent } from "@/lib/booking-links";
 import { mapsHrefForPlace, withHttps } from "@/lib/external-links";
+import { BookingLink } from "./BookingLink";
 
 export function EventPlaceLinks({
   type,
@@ -10,6 +12,11 @@ export function EventPlaceLinks({
   websiteUrl,
   lat,
   lng,
+  departureAirportCode,
+  arrivalAirportCode,
+  startsAt,
+  endsAt,
+  dayDate,
 }: {
   type: EventType;
   title: string;
@@ -19,6 +26,11 @@ export function EventPlaceLinks({
   websiteUrl: string | null;
   lat: number | null;
   lng: number | null;
+  departureAirportCode?: string | null;
+  arrivalAirportCode?: string | null;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
+  dayDate?: Date | null;
 }) {
   const mapsHref = mapsHrefForPlace({
     googleMapsUrl,
@@ -34,7 +46,20 @@ export function EventPlaceLinks({
     googlePlaceId?.trim() || googleMapsUrl?.trim() || websiteUrl?.trim(),
   );
 
-  if (!hasLinks && !location?.trim()) return null;
+  const booking = bookingLinkForEvent({
+    type,
+    title,
+    location,
+    lat,
+    lng,
+    departureAirportCode,
+    arrivalAirportCode,
+    startsAt,
+    endsAt,
+    dayDate,
+  });
+
+  if (!hasLinks && !location?.trim() && !booking) return null;
 
   const placeSectionLabel =
     type === "HOTEL" && (hasListedPlace || location?.trim())
@@ -75,6 +100,11 @@ export function EventPlaceLinks({
               Open in Google Maps
             </a>
           ) : null}
+        </div>
+      ) : null}
+      {booking ? (
+        <div className="mt-1.5">
+          <BookingLink link={booking} />
         </div>
       ) : null}
     </div>
