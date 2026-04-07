@@ -255,6 +255,7 @@ export function StoryEventCard({
             <HotelPlaceInput
               searchLabel={placePicker.searchLabel}
               placeholder={placePicker.placeholder}
+              autocompleteTypes={ev.type === "HOTEL" ? "lodging" : undefined}
               value={{
                 title: ev.title,
                 location: ev.location,

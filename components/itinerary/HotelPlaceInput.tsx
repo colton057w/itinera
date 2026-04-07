@@ -33,6 +33,8 @@ type Props = {
   /** e.g. "Find hotel" vs "Find restaurant or café" */
   searchLabel?: string;
   placeholder?: string;
+  /** Google Place Autocomplete `types` (e.g. `lodging` for hotels). Omit for general POIs. */
+  autocompleteTypes?: string;
 };
 
 export function HotelPlaceInput({
@@ -40,6 +42,7 @@ export function HotelPlaceInput({
   onChange,
   searchLabel = "Find place",
   placeholder = "Search Google Maps — museum, restaurant, venue…",
+  autocompleteTypes,
 }: Props) {
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,8 +72,12 @@ export function HotelPlaceInput({
       void (async () => {
         setLoading(true);
         try {
+          const typesQ =
+            autocompleteTypes && autocompleteTypes.trim()
+              ? `&types=${encodeURIComponent(autocompleteTypes.trim())}`
+              : "";
           const res = await fetch(
-            `/api/places/autocomplete?input=${encodeURIComponent(query.trim())}`,
+            `/api/places/autocomplete?input=${encodeURIComponent(query.trim())}${typesQ}`,
           );
           const data = (await res.json()) as {
             predictions?: Prediction[];
@@ -92,7 +99,7 @@ export function HotelPlaceInput({
     }, 320);
 
     return () => window.clearTimeout(t);
-  }, [query, open]);
+  }, [query, open, autocompleteTypes]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {

@@ -22,8 +22,28 @@ export function isGooglePlacesConfigured(): boolean {
   return Boolean(placesKey());
 }
 
+/** Single Place Autocomplete `types` filter (Google allows at most one). Omit for all POIs. */
+const AUTOCOMPLETE_TYPES_ALLOWLIST = new Set([
+  "lodging",
+  "restaurant",
+  "cafe",
+  "bar",
+  "establishment",
+  "tourist_attraction",
+  "museum",
+  "park",
+  "geocode",
+]);
+
+export function sanitizeAutocompleteTypesParam(raw: string | null): string | undefined {
+  if (!raw || raw.length > 40) return undefined;
+  const t = raw.trim().toLowerCase();
+  return AUTOCOMPLETE_TYPES_ALLOWLIST.has(t) ? t : undefined;
+}
+
 export async function fetchPlaceAutocomplete(
   input: string,
+  types?: string | null,
 ): Promise<AutocompletePrediction[]> {
   const key = placesKey();
   const trimmed = input.trim();
@@ -31,7 +51,8 @@ export async function fetchPlaceAutocomplete(
 
   const u = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
   u.searchParams.set("input", trimmed);
-  u.searchParams.set("types", "lodging");
+  const filtered = types ? sanitizeAutocompleteTypesParam(types) : undefined;
+  if (filtered) u.searchParams.set("types", filtered);
   u.searchParams.set("key", key);
 
   const res = await fetch(u.toString());
