@@ -176,6 +176,12 @@ export default async function ItineraryPage({
         <ItineraryStarButton itineraryId={it.id} initialStarred={myStarred} />
         {session?.user?.id === it.ownerId ? (
           <>
+            <Link
+              href={`/itineraries/${it.slug}/edit`}
+              className="inline-flex items-center justify-center rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+            >
+              Edit itinerary
+            </Link>
             <DeleteItineraryButton itineraryId={it.id} redirectTo="/profile" />
             <span className="text-sm text-neutral-500 dark:text-zinc-400">You own this plan</span>
           </>

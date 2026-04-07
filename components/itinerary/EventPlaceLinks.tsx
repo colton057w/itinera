@@ -20,7 +20,6 @@ export function EventPlaceLinks({
   lat: number | null;
   lng: number | null;
 }) {
-  const isHotel = type === "HOTEL";
   const mapsHref = mapsHrefForPlace({
     googleMapsUrl,
     googlePlaceId,
@@ -31,14 +30,24 @@ export function EventPlaceLinks({
   });
   const hasMaps = Boolean(mapsHref);
   const hasLinks = Boolean(websiteUrl?.trim() || hasMaps);
+  const hasListedPlace = Boolean(
+    googlePlaceId?.trim() || googleMapsUrl?.trim() || websiteUrl?.trim(),
+  );
 
   if (!hasLinks && !location?.trim()) return null;
 
+  const placeSectionLabel =
+    type === "HOTEL" && (hasListedPlace || location?.trim())
+      ? "Stay / hotel"
+      : type !== "HOTEL" && hasListedPlace
+        ? "Place"
+        : null;
+
   return (
     <div className="mt-2 space-y-1">
-      {isHotel ? (
+      {placeSectionLabel ? (
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
-          Hotel
+          {placeSectionLabel}
         </p>
       ) : null}
       {location?.trim() ? (

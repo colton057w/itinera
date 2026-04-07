@@ -24,3 +24,36 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Storybook Builder — slide-in for new event cards */
+@keyframes story-card-in-mobile {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes story-card-in-desktop {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.story-card-enter {
+  animation: story-card-in-mobile 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-width: 768px) {
+  .story-card-enter {
+    animation: story-card-in-desktop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}

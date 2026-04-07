@@ -30,9 +30,17 @@ export type HotelPlaceValue = {
 type Props = {
   value: HotelPlaceValue;
   onChange: (patch: Partial<HotelPlaceValue>) => void;
+  /** e.g. "Find hotel" vs "Find restaurant or café" */
+  searchLabel?: string;
+  placeholder?: string;
 };
 
-export function HotelPlaceInput({ value, onChange }: Props) {
+export function HotelPlaceInput({
+  value,
+  onChange,
+  searchLabel = "Find place",
+  placeholder = "Search Google Maps — museum, restaurant, venue…",
+}: Props) {
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(() =>
@@ -149,7 +157,8 @@ export function HotelPlaceInput({ value, onChange }: Props) {
     <div ref={containerRef} className="space-y-2 md:col-span-2">
       <label className="block space-y-1">
         <span className="text-xs text-neutral-500 dark:text-zinc-400">
-          Find hotel <span className="font-normal">(Google-style search)</span>
+          {searchLabel}{" "}
+          <span className="font-normal">(Google Places — links on your trip)</span>
         </span>
         <input
           type="text"
@@ -159,7 +168,7 @@ export function HotelPlaceInput({ value, onChange }: Props) {
           aria-controls={listId}
           aria-autocomplete="list"
           className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-          placeholder="e.g. Hotel Caruso Ravello"
+          placeholder={placeholder}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -187,8 +196,8 @@ export function HotelPlaceInput({ value, onChange }: Props) {
             GOOGLE_PLACES_API_KEY
           </code>{" "}
           to <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/50">.env</code> and
-          enable <strong>Places API</strong> in Google Cloud. You can still type the hotel name and
-          address manually below.
+          enable <strong>Places API</strong> in Google Cloud. You can still type the name and
+          address manually in the fields below.
         </p>
       ) : null}
 
@@ -231,7 +240,7 @@ export function HotelPlaceInput({ value, onChange }: Props) {
 
       {value.googlePlaceId ? (
         <p className="text-xs text-emerald-800 dark:text-emerald-400">
-          Linked to Google Places — readers will see website and Maps buttons on your itinerary.
+          Linked to Google Places — readers get Maps and website links on the published trip.
         </p>
       ) : null}
     </div>

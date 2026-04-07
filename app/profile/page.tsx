@@ -257,11 +257,19 @@ export default async function ProfilePage() {
                     ) : null}
                   </div>
                 </Link>
-                <DeleteItineraryButton
-                  itineraryId={it.id}
-                  redirectTo="/profile"
-                  variant="compact"
-                />
+                <div className="flex shrink-0 flex-col justify-center gap-2">
+                  <Link
+                    href={`/itineraries/${it.slug}/edit`}
+                    className="rounded-lg border border-neutral-200 px-2.5 py-1.5 text-center text-xs font-medium text-neutral-800 hover:bg-neutral-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteItineraryButton
+                    itineraryId={it.id}
+                    redirectTo="/profile"
+                    variant="compact"
+                  />
+                </div>
               </li>
             ))}
           </ul>
