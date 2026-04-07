@@ -1,14 +1,23 @@
 import type { CommentNode } from "@/types/comment";
 
-type Row = {
+export type CommentRow = {
   id: string;
   body: string;
   createdAt: Date;
   parentId: string | null;
+  mentionedDayIndices: number[];
+  voteScore: number;
   author: { id: string; name: string | null; image: string | null };
+  votes?: { value: number }[];
 };
 
-export function buildCommentTree(rows: Row[]): CommentNode[] {
+function myVoteFromRow(r: CommentRow): -1 | 0 | 1 {
+  const v = r.votes?.[0]?.value;
+  if (v === 1 || v === -1) return v;
+  return 0;
+}
+
+export function buildCommentTree(rows: CommentRow[]): CommentNode[] {
   const map = new Map<string, CommentNode>();
   for (const r of rows) {
     map.set(r.id, {
@@ -18,6 +27,9 @@ export function buildCommentTree(rows: Row[]): CommentNode[] {
       parentId: r.parentId,
       author: r.author,
       replies: [],
+      mentionedDayIndices: [...r.mentionedDayIndices],
+      voteScore: r.voteScore,
+      myVote: myVoteFromRow(r),
     });
   }
   const roots: CommentNode[] = [];

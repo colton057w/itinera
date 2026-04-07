@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FeedCard } from "@/components/feed/FeedCard";
-import { queryFeed } from "@/lib/feed";
+import { queryFeed, type TripKindFilter } from "@/lib/feed";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 
@@ -9,6 +9,8 @@ type Search = {
   location?: string;
   durationMin?: string;
   durationMax?: string;
+  /** empty | vacation | wedding */
+  kind?: string;
 };
 
 export default async function Home({
@@ -22,6 +24,13 @@ export default async function Home({
   const durationMin = sp.durationMin ? Number.parseInt(sp.durationMin, 10) : null;
   const durationMax = sp.durationMax ? Number.parseInt(sp.durationMax, 10) : null;
 
+  let tripKind: TripKindFilter = "ALL";
+  if (sp.kind === "vacation") tripKind = "VACATION";
+  else if (sp.kind === "wedding") tripKind = "WEDDING_EVENT";
+
+  const kindParam =
+    sp.kind === "vacation" || sp.kind === "wedding" ? sp.kind : "";
+
   const onVercel = process.env.VERCEL === "1";
   const databaseUrl = process.env.DATABASE_URL ?? "";
   const databaseUrlLooksLocal =
@@ -32,6 +41,7 @@ export default async function Home({
     location: location ?? null,
     durationMin: durationMin && !Number.isNaN(durationMin) ? durationMin : null,
     durationMax: durationMax && !Number.isNaN(durationMax) ? durationMax : null,
+    tripKind,
   });
 
   const session = await auth();
@@ -65,10 +75,42 @@ export default async function Home({
       </header>
 
       <form
-        className="mb-8 flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:flex-wrap sm:items-end"
+        className="mb-8 flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:flex-wrap sm:items-end"
         action="/"
         method="get"
       >
+        <fieldset className="min-w-full sm:min-w-0 sm:flex-[1_1_100%]">
+          <legend className="text-xs font-medium text-neutral-500 dark:text-zinc-400">
+            Trip type
+          </legend>
+          <div className="mt-1.5 inline-flex rounded-full border border-neutral-200 bg-neutral-50/80 p-0.5 dark:border-zinc-700 dark:bg-zinc-800/60">
+            {(
+              [
+                { value: "", label: "All trips" },
+                { value: "vacation", label: "Vacations" },
+                { value: "wedding", label: "Weddings & events" },
+              ] as const
+            ).map((opt) => (
+              <label
+                key={opt.value || "all"}
+                className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  kindParam === opt.value
+                    ? "bg-white text-neutral-900 shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="kind"
+                  value={opt.value}
+                  defaultChecked={kindParam === opt.value}
+                  className="sr-only"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="flex min-w-[8rem] flex-1 flex-col gap-1">
           <span className="text-xs font-medium text-neutral-500 dark:text-zinc-400">Vibe / tag</span>
           <input
@@ -216,6 +258,7 @@ export default async function Home({
                   ownerName={item.owner.name}
                   myVote={voteMap.get(item.id) ?? 0}
                   myStarred={starMap.get(item.id) ?? false}
+                  previewUrls={item.previewUrls}
                 />
               </li>
             ))}

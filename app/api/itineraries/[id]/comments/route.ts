@@ -18,6 +18,21 @@ async function canViewItinerary(
   return Boolean(userId && userId === it.ownerId);
 }
 
+function commentInclude(userId: string | undefined) {
+  return {
+    author: { select: { id: true, name: true, image: true } },
+    ...(userId
+      ? {
+          votes: {
+            where: { userId },
+            select: { value: true },
+            take: 1,
+          },
+        }
+      : {}),
+  } as const;
+}
+
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> },
@@ -33,12 +48,21 @@ export async function GET(
   const rows = await prisma.comment.findMany({
     where: { itineraryId },
     orderBy: { createdAt: "asc" },
-    include: {
-      author: { select: { id: true, name: true, image: true } },
-    },
+    include: commentInclude(session?.user?.id),
   });
 
   return NextResponse.json({ comments: buildCommentTree(rows) });
+}
+
+function parseMentionedDayIndices(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  const out: number[] = [];
+  for (const x of raw) {
+    if (typeof x === "number" && Number.isInteger(x) && x >= 0 && x < 10_000) {
+      out.push(x);
+    }
+  }
+  return [...new Set(out)].slice(0, 8);
 }
 
 export async function POST(
@@ -56,7 +80,11 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = (await req.json()) as { body?: string; parentId?: string | null };
+  const body = (await req.json()) as {
+    body?: string;
+    parentId?: string | null;
+    mentionedDayIndices?: unknown;
+  };
   const text = body.body?.trim();
   if (!text || text.length > 8000) {
     return NextResponse.json({ error: "Invalid comment" }, { status: 400 });
@@ -71,26 +99,42 @@ export async function POST(
     }
   }
 
+  const mentionedDayIndices = parseMentionedDayIndices(body.mentionedDayIndices);
+  if (mentionedDayIndices.length > 0) {
+    const dayRows = await prisma.day.findMany({
+      where: { itineraryId },
+      select: { dayIndex: true },
+    });
+    const allowed = new Set(dayRows.map((d) => d.dayIndex));
+    for (const i of mentionedDayIndices) {
+      if (!allowed.has(i)) {
+        return NextResponse.json({ error: "Invalid day mention" }, { status: 400 });
+      }
+    }
+  }
+
   const created = await prisma.comment.create({
     data: {
       itineraryId,
       authorId: session.user.id,
       parentId: body.parentId ?? null,
       body: text,
+      mentionedDayIndices,
     },
-    include: {
-      author: { select: { id: true, name: true, image: true } },
-    },
+    include: commentInclude(session.user.id),
   });
 
-  return NextResponse.json({
-    comment: {
-      id: created.id,
-      body: created.body,
-      createdAt: created.createdAt.toISOString(),
-      parentId: created.parentId,
-      author: created.author,
-      replies: [],
-    } satisfies CommentNode,
-  });
+  const node: CommentNode = {
+    id: created.id,
+    body: created.body,
+    createdAt: created.createdAt.toISOString(),
+    parentId: created.parentId,
+    author: created.author,
+    replies: [],
+    mentionedDayIndices: [...created.mentionedDayIndices],
+    voteScore: created.voteScore,
+    myVote: created.votes?.[0]?.value === 1 ? 1 : created.votes?.[0]?.value === -1 ? -1 : 0,
+  };
+
+  return NextResponse.json({ comment: node });
 }

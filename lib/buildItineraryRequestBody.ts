@@ -1,4 +1,5 @@
 import type { DayDraft } from "@/components/itinerary/storybook/types";
+import { parseMoneyToMinor } from "@/lib/formatMoney";
 
 /** Parse "a, b, #c" → normalized tag strings */
 export function parseTagsInput(raw: string): string[] {
@@ -18,12 +19,14 @@ export function parseTagsInput(raw: string): string[] {
 export function buildItineraryRequestBody(
   title: string,
   visibility: "PUBLIC" | "PRIVATE",
+  tripKind: "VACATION" | "WEDDING_EVENT",
   tags: string[],
   days: DayDraft[],
 ) {
   return {
     title: title.trim(),
     visibility,
+    tripKind,
     tags,
     days: days.map((day, dayIndex) => ({
       dayIndex,
@@ -67,6 +70,8 @@ export function buildItineraryRequestBody(
             ev.type === "FLIGHT" && ev.arrivalAt
               ? new Date(ev.arrivalAt).toISOString()
               : null,
+          estimatedCostMinor: parseMoneyToMinor(ev.estimatedCostDollars.trim() || null),
+          currency: (ev.currency || "USD").trim().toUpperCase() || "USD",
         };
       }),
     })),

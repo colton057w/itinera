@@ -65,6 +65,7 @@ export default async function EditItineraryPage({
         initialTitle={it.title}
         initialTagsInput={initialTagsInput}
         initialVisibility={it.visibility}
+        initialTripKind={it.tripKind === "WEDDING_EVENT" ? "WEDDING_EVENT" : "VACATION"}
         initialDays={initialDays}
       />
     </div>

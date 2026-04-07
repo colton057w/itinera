@@ -44,6 +44,7 @@ export async function POST(req: Request) {
 
   const name = `${randomBytes(16).toString("hex")}${ext}`;
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  const onVercel = process.env.VERCEL === "1";
 
   if (blobToken) {
     const blob = await put(`itinera/${session.user.id}/${name}`, buf, {
@@ -52,6 +53,16 @@ export async function POST(req: Request) {
       contentType: file.type || "application/octet-stream",
     });
     return NextResponse.json({ url: blob.url });
+  }
+
+  if (onVercel) {
+    return NextResponse.json(
+      {
+        error:
+          "Uploads need Vercel Blob. In the project: Storage → Blob → connect the store (sets BLOB_READ_WRITE_TOKEN), then redeploy.",
+      },
+      { status: 503 },
+    );
   }
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads");

@@ -45,14 +45,20 @@ In **Vercel → Project → Settings → Environment Variables**, set:
 | `DATABASE_URL` | Production Postgres URL (often **pooled** / `?pgbouncer=true` if your provider splits pool vs direct). |
 | `NEXTAUTH_SECRET` | Long random string (`openssl rand -base64 32`). |
 | `NEXTAUTH_URL` | Your live site URL, e.g. `https://your-app.vercel.app` (no trailing slash). |
+| `AUTH_TRUST_HOST` | Set to `true` if you deploy behind your own reverse proxy. Vercel sets `VERCEL=1`, which already makes NextAuth use the incoming `Host` (helpful for preview URLs vs `NEXTAUTH_URL`). |
 | `BLOB_READ_WRITE_TOKEN` | From Vercel Blob (step 2). |
-| `GOOGLE_PLACES_API_KEY` | Optional; enables hotel autocomplete. |
+| `GOOGLE_PLACES_API_KEY` | Optional; enables place autocomplete (server). |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Optional; **Maps JavaScript API** for the itinerary trip map (client). Can match your Places project if both APIs are enabled. |
 
 Redeploy after changing env vars.
 
 ### 4. Connect Git and deploy
 
-Push this repo to GitHub/GitLab/Bitbucket, import the repo in [Vercel](https://vercel.com/new), and deploy. The default **Build Command** `npm run build` runs `prisma generate` and `next build`.
+Push this repo to GitHub/GitLab/Bitbucket, import the repo in [Vercel](https://vercel.com/new), and deploy.
+
+This repo includes [`vercel.json`](./vercel.json) so the **build** runs `prisma migrate deploy` against `DATABASE_URL`, then `prisma generate` and `next build`. Set `DATABASE_URL` in Vercel *before* the first deploy (or the build will fail at the migration step).
+
+Local builds still use `npm run build` (migrations are not run automatically).
 
 ### 5. Production checks
 

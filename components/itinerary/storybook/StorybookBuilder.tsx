@@ -26,6 +26,7 @@ export type StorybookBuilderProps = {
   initialTitle?: string;
   initialTagsInput?: string;
   initialVisibility?: "PUBLIC" | "PRIVATE";
+  initialTripKind?: "VACATION" | "WEDDING_EVENT";
   initialDays?: DayDraft[];
 };
 
@@ -36,12 +37,14 @@ export function StorybookBuilder({
   initialTitle = "",
   initialTagsInput = "",
   initialVisibility = "PUBLIC",
+  initialTripKind = "VACATION",
   initialDays,
 }: StorybookBuilderProps = {}) {
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [tagsInput, setTagsInput] = useState(initialTagsInput);
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">(initialVisibility);
+  const [tripKind, setTripKind] = useState<"VACATION" | "WEDDING_EVENT">(initialTripKind);
   const [days, setDays] = useState<DayDraft[]>(initialDays ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -127,7 +130,7 @@ export function StorybookBuilder({
     setSaving(true);
     try {
       const tags = parseTagsInput(tagsInput);
-      const payload = buildItineraryRequestBody(title, visibility, tags, days);
+      const payload = buildItineraryRequestBody(title, visibility, tripKind, tags, days);
       if (mode === "edit" && itineraryId) {
         const res = await fetch(`/api/itineraries/${itineraryId}`, {
           method: "PATCH",
@@ -159,7 +162,7 @@ export function StorybookBuilder({
     } finally {
       setSaving(false);
     }
-  }, [days, itineraryId, mode, returnSlug, router, tagsInput, title, visibility]);
+  }, [days, itineraryId, mode, returnSlug, router, tagsInput, title, tripKind, visibility]);
 
   const dayColumn = (day: DayDraft, dayIndex: number, mobileTimeline: boolean) => (
     <div
@@ -285,6 +288,19 @@ export function StorybookBuilder({
                 ← View trip
               </Link>
             ) : null}
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 dark:text-zinc-400">
+              <span className="sr-only">Trip type</span>
+              <select
+                className="rounded-full border border-neutral-200 bg-white px-3 py-2 text-sm font-medium dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                value={tripKind}
+                onChange={(e) =>
+                  setTripKind(e.target.value as "VACATION" | "WEDDING_EVENT")
+                }
+              >
+                <option value="VACATION">Vacation trip</option>
+                <option value="WEDDING_EVENT">Wedding or event</option>
+              </select>
+            </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 dark:text-zinc-400">
               <span className="sr-only">Visibility</span>
               <select

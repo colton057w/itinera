@@ -1,11 +1,10 @@
-import { Visibility } from "@prisma/client";
+import { TripKind, Visibility } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { shiftItineraryDatesForClone, parseIsoDateOnly } from "@/lib/cloneDateShift";
 import { computeHotScore } from "@/lib/hotScore";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 import { slugFromTitle } from "@/lib/slug";
-
-type RemapDay = { sourceDayIndex: number; date: string };
 
 export async function POST(
   req: Request,
@@ -20,12 +19,22 @@ export async function POST(
   const body = (await req.json().catch(() => ({}))) as {
     title?: string;
     visibility?: string;
-    remapDays?: RemapDay[];
+    startDate?: string;
   };
+
+  const startRaw = body.startDate?.trim();
+  if (!startRaw) {
+    return NextResponse.json({ error: "startDate is required (YYYY-MM-DD)" }, { status: 400 });
+  }
+  const newTripStart = parseIsoDateOnly(startRaw);
+  if (!newTripStart) {
+    return NextResponse.json({ error: "Invalid startDate" }, { status: 400 });
+  }
 
   const source = await prisma.itinerary.findUnique({
     where: { id: sourceId },
     include: {
+      owner: { select: { name: true } },
       tags: true,
       days: {
         orderBy: { dayIndex: "asc" },
@@ -57,13 +66,21 @@ export async function POST(
         ? Visibility.PUBLIC
         : source.visibility;
 
-  const remap = new Map<number, Date>();
-  for (const r of body.remapDays ?? []) {
-    remap.set(r.sourceDayIndex, new Date(r.date));
-  }
+  const sourceDaysForShift = source.days.map((d) => ({
+    dayIndex: d.dayIndex,
+    date: d.date,
+    events: d.events.map((ev) => ({
+      startsAt: ev.startsAt,
+      endsAt: ev.endsAt,
+    })),
+  }));
+
+  const shifted = shiftItineraryDatesForClone(sourceDaysForShift, newTripStart);
+  const shiftedByDay = new Map(shifted.map((s) => [s.dayIndex, s]));
 
   const now = new Date();
   const hotScore = computeHotScore(0, now);
+  const cloneSourceAuthorName = source.owner.name?.trim() || "Another planner";
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -75,8 +92,10 @@ export async function POST(
           summary: source.summary,
           coverImageUrl: source.coverImageUrl,
           visibility,
+          tripKind: source.tripKind ?? TripKind.VACATION,
           forkedFromId: source.id,
           forkedAt: now,
+          cloneSourceAuthorName,
           voteScore: 0,
           hotScore,
           tags: {
@@ -85,42 +104,56 @@ export async function POST(
             })),
           },
           days: {
-            create: source.days.map((day) => ({
-              dayIndex: day.dayIndex,
-              label: day.label,
-              date: remap.get(day.dayIndex) ?? null,
-              events: {
-                create: day.events.map((ev) => ({
-                  eventIndex: ev.eventIndex,
-                  type: ev.type,
-                  title: ev.title,
-                  description: ev.description,
-                  location: ev.location,
-                  lat: ev.lat,
-                  lng: ev.lng,
-                  googlePlaceId: ev.googlePlaceId,
-                  googleMapsUrl: ev.googleMapsUrl,
-                  websiteUrl: ev.websiteUrl,
-                  startsAt: ev.startsAt,
-                  endsAt: ev.endsAt,
-                  ratingStars: ev.ratingStars,
-                  airline: ev.airline,
-                  departureAirportCode: ev.departureAirportCode,
-                  arrivalAirportCode: ev.arrivalAirportCode,
-                  departureAirportName: ev.departureAirportName,
-                  arrivalAirportName: ev.arrivalAirportName,
-                  coverImageUrl: ev.coverImageUrl,
-                  media: {
-                    create: ev.media.map((m) => ({
-                      url: m.url,
-                      width: m.width,
-                      height: m.height,
-                      sortOrder: m.sortOrder,
-                    })),
-                  },
-                })),
-              },
-            })),
+            create: source.days.map((day) => {
+              const s = shiftedByDay.get(day.dayIndex);
+              if (!s) {
+                throw new Error(`Missing shift for day ${day.dayIndex}`);
+              }
+              return {
+                dayIndex: day.dayIndex,
+                label: day.label,
+                date: s.date,
+                events: {
+                  create: day.events.map((ev, i) => {
+                    const se = s.events[i];
+                    if (!se) {
+                      throw new Error(`Missing shift for event ${i} on day ${day.dayIndex}`);
+                    }
+                    return {
+                      eventIndex: ev.eventIndex,
+                      type: ev.type,
+                      title: ev.title,
+                      description: ev.description,
+                      location: ev.location,
+                      lat: ev.lat,
+                      lng: ev.lng,
+                      googlePlaceId: ev.googlePlaceId,
+                      googleMapsUrl: ev.googleMapsUrl,
+                      websiteUrl: ev.websiteUrl,
+                      startsAt: se.startsAt,
+                      endsAt: se.endsAt,
+                      ratingStars: ev.ratingStars,
+                      airline: ev.airline,
+                      departureAirportCode: ev.departureAirportCode,
+                      arrivalAirportCode: ev.arrivalAirportCode,
+                      departureAirportName: ev.departureAirportName,
+                      arrivalAirportName: ev.arrivalAirportName,
+                      coverImageUrl: ev.coverImageUrl,
+                      estimatedCostMinor: ev.estimatedCostMinor,
+                      currency: ev.currency,
+                      media: {
+                        create: ev.media.map((m) => ({
+                          url: m.url,
+                          width: m.width,
+                          height: m.height,
+                          sortOrder: m.sortOrder,
+                        })),
+                      },
+                    };
+                  }),
+                },
+              };
+            }),
           },
         },
       });

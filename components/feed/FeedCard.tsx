@@ -1,7 +1,54 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { VoteControl } from "@/components/feed/VoteControl";
+import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
+
+function PolaroidFan({ urls }: { urls: string[] }) {
+  const u = urls.filter(Boolean).slice(0, 3);
+  if (u.length === 0) return null;
+
+  return (
+    <motion.div
+      className="relative h-[7.25rem] w-[6.75rem] shrink-0 touch-manipulation"
+      initial="rest"
+      whileHover="hover"
+      variants={{
+        rest: {},
+        hover: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
+      }}
+    >
+      {u.map((url, i) => (
+        <motion.div
+          key={`${url}-${i}`}
+          variants={{
+            rest: {
+              rotate: -8 + i * 8,
+              x: -8 + i * 8,
+              y: i * 3,
+              scale: 1,
+              zIndex: i,
+            },
+            hover: {
+              rotate: -20 + i * 20,
+              x: -18 + i * 26,
+              y: -12,
+              scale: 1.05,
+              zIndex: i === 1 ? 4 : i === 0 ? 3 : 2,
+            },
+          }}
+          transition={{ type: "spring", stiffness: 420, damping: 30 }}
+          className="absolute bottom-0 left-1/2 -ml-[2.25rem] h-[5.75rem] w-[4.5rem] overflow-hidden rounded-[2px] border-[5px] border-white bg-white shadow-[0_10px_28px_rgba(0,0,0,0.16)] dark:border-zinc-100 dark:shadow-[0_10px_28px_rgba(0,0,0,0.5)]"
+        >
+          <Image src={url} alt="" fill sizes="72px" className="object-cover" />
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
 
 export function FeedCard(props: {
   id: string;
@@ -15,7 +62,15 @@ export function FeedCard(props: {
   ownerName: string | null;
   myVote: number;
   myStarred: boolean;
+  previewUrls: string[];
 }) {
+  const stackUrls =
+    props.previewUrls.length > 0
+      ? props.previewUrls
+      : props.coverImageUrl
+        ? [props.coverImageUrl]
+        : [];
+
   return (
     <article className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
       <VoteControl
@@ -28,21 +83,17 @@ export function FeedCard(props: {
       </div>
       <Link href={`/itineraries/${props.slug}`} className="min-w-0 flex-1">
         <div className="flex gap-3">
-          <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-zinc-800">
-            {props.coverImageUrl ? (
-              <Image
-                src={props.coverImageUrl}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="128px"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs text-neutral-400 dark:text-zinc-500">
-                No photo
-              </div>
-            )}
-          </div>
+          {stackUrls.length > 0 ? (
+            <PolaroidFan urls={stackUrls} />
+          ) : (
+            <TripCoverVisual
+              variant="feed"
+              coverImageUrl={props.coverImageUrl}
+              title={props.title}
+              summary={props.summary}
+              tags={props.tags}
+            />
+          )}
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold text-neutral-900 hover:underline dark:text-zinc-100">
               {props.title}

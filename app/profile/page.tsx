@@ -1,7 +1,7 @@
 import { Visibility } from "@prisma/client";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
@@ -71,6 +71,7 @@ export default async function ProfilePage() {
           voteScore: true,
           updatedAt: true,
           _count: { select: { days: true } },
+          tags: { include: { tag: true } },
         },
       },
     },
@@ -213,21 +214,13 @@ export default async function ProfilePage() {
                   href={`/itineraries/${it.slug}`}
                   className="flex min-w-0 flex-1 gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
                 >
-                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-zinc-800">
-                    {it.coverImageUrl ? (
-                      <Image
-                        src={it.coverImageUrl}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="112px"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-neutral-400 dark:text-zinc-500">
-                        No photo
-                      </div>
-                    )}
-                  </div>
+                  <TripCoverVisual
+                    variant="profile"
+                    coverImageUrl={it.coverImageUrl}
+                    title={it.title}
+                    summary={it.summary}
+                    tags={it.tags.map((t) => t.tag.name)}
+                  />
                   <div className="min-w-0 flex-1 py-0.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-neutral-900 dark:text-zinc-100">

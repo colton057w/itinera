@@ -48,6 +48,12 @@ enum Visibility {
   PRIVATE
 }
 
+/// High-level listing category for search (vacation vs wedding / events)
+enum TripKind {
+  VACATION
+  WEDDING_EVENT
+}
+
 enum EventType {
   FLIGHT
   HOTEL
@@ -69,6 +75,7 @@ model User {
   itineraries Itinerary[]
   votes       Vote[]
   comments    Comment[]
+  commentVotes CommentVote[]
   starred     ItineraryStar[]
 
   createdAt DateTime @default(now())
@@ -83,14 +90,23 @@ model Itinerary {
   summary       String?
   coverImageUrl String?
   visibility    Visibility  @default(PUBLIC)
+  tripKind      TripKind    @default(VACATION)
 
   forkedFromId String?
   forkedFrom   Itinerary?  @relation("ItineraryForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
   forks        Itinerary[] @relation("ItineraryForks")
   forkedAt     DateTime?
 
+  /// Original planner display name captured at clone time ("Cloned from …")
+  cloneSourceAuthorName String?
+
   voteScore Int   @default(0)
   hotScore  Float @default(0)
+
+  /// Paid clone (Stripe Connect — wire in production)
+  premiumCloneEnabled     Boolean @default(false)
+  premiumClonePriceCents  Int?
+  premiumCloneCurrency    String? @default("USD")
 
   tags     ItineraryTag[]
   days     Day[]
@@ -102,6 +118,7 @@ model Itinerary {
   updatedAt DateTime @updatedAt
 
   @@index([visibility, hotScore(sort: Desc)])
+  @@index([visibility, tripKind, hotScore(sort: Desc)])
   @@index([ownerId])
 }
 
@@ -167,6 +184,12 @@ model Event {
   /// Business website from Place Details when available
   websiteUrl    String?
 
+  /// Estimated cost in minor units (e.g. cents), optional
+  estimatedCostMinor Int?
+  currency           String? @default("USD")
+
+  guestPhotos GuestEventPhoto[]
+
   @@unique([dayId, eventIndex])
   @@index([dayId])
 }
@@ -179,6 +202,19 @@ model EventMedia {
   width     Int?
   height    Int?
   sortOrder Int    @default(0)
+}
+
+/// Guest-uploaded memories for an event (wedding / shared trips)
+model GuestEventPhoto {
+  id         String   @id @default(cuid())
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  url        String
+  caption    String?
+  authorName String?
+  createdAt  DateTime @default(now())
+
+  @@index([eventId, createdAt])
 }
 
 model Vote {
@@ -215,7 +251,24 @@ model Comment {
   parent      Comment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
   replies     Comment[] @relation("CommentThread")
   body        String
+  /// Itinerary day indices (0-based) this comment calls out, e.g. lunch on Day 3 → [2]
+  mentionedDayIndices Int[] @default([])
+  voteScore   Int       @default(0)
+  votes       CommentVote[]
   createdAt   DateTime  @default(now())
 
   @@index([itineraryId, createdAt])
+  @@index([itineraryId, voteScore])
+}
+
+model CommentVote {
+  userId    String
+  commentId String
+  value     Int // 1 up, -1 down
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, commentId])
+  @@index([commentId])
 }

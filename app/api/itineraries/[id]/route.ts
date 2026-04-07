@@ -1,4 +1,4 @@
-import { Visibility } from "@prisma/client";
+import { TripKind, Visibility } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { computeHotScore } from "@/lib/hotScore";
 import type { DayInput } from "@/lib/itineraryWriteShared";
@@ -46,6 +46,7 @@ export async function PATCH(
       title?: string;
       summary?: string | null;
       visibility?: string;
+      tripKind?: string;
       tags?: unknown;
       days?: DayInput[];
     };
@@ -63,6 +64,9 @@ export async function PATCH(
     const visibility =
       body.visibility === "PRIVATE" ? Visibility.PRIVATE : Visibility.PUBLIC;
 
+    const tripKind =
+      body.tripKind === "WEDDING_EVENT" ? TripKind.WEDDING_EVENT : TripKind.VACATION;
+
     const tagNames = normalizeTags(body.tags);
     const coverImageUrl = firstCoverFromDays(days);
     const hotScore = computeHotScore(existing.voteScore, existing.createdAt);
@@ -79,6 +83,7 @@ export async function PATCH(
           title,
           summary: body.summary?.trim() || null,
           visibility,
+          tripKind,
           coverImageUrl,
           hotScore,
           tags: {

@@ -88,6 +88,7 @@ async function main() {
       coverImageUrl:
         "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80",
       visibility: "PUBLIC",
+      tripKind: "WEDDING_EVENT",
       voteScore: 22,
       hotScore: hotScore(22, createdAt1),
       createdAt: createdAt1,

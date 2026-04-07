@@ -37,6 +37,8 @@ type LoadedEvent = {
   arrivalAirportName: string | null;
   startsAt: Date | null;
   endsAt: Date | null;
+  estimatedCostMinor: number | null;
+  currency: string | null;
 };
 
 type LoadedDay = {
@@ -68,6 +70,9 @@ function eventToDraft(ev: LoadedEvent): EventDraft {
     arrivalAirportName: ev.arrivalAirportName ?? "",
     departureAt: toDatetimeLocal(ev.startsAt),
     arrivalAt: toDatetimeLocal(ev.endsAt),
+    estimatedCostDollars:
+      ev.estimatedCostMinor != null ? (ev.estimatedCostMinor / 100).toFixed(2) : "",
+    currency: ev.currency?.trim() || "USD",
   };
 }
 

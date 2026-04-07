@@ -22,6 +22,9 @@ export type EventDraft = {
   arrivalAirportName: string;
   departureAt: string;
   arrivalAt: string;
+  /** Local input as dollars (e.g. "120" or "49.99"); sent as minor units in API */
+  estimatedCostDollars: string;
+  currency: string;
 };
 
 export type DayDraft = {
@@ -47,6 +50,8 @@ const emptyEventBase = (): Omit<EventDraft, "clientId" | "type" | "title" | "sto
   arrivalAirportName: "",
   departureAt: "",
   arrivalAt: "",
+  estimatedCostDollars: "",
+  currency: "USD",
 });
 
 export function createQuickEvent(kind: StoryKind): EventDraft {

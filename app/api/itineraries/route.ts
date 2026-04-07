@@ -1,4 +1,4 @@
-import { Visibility } from "@prisma/client";
+import { TripKind, Visibility } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { computeHotScore } from "@/lib/hotScore";
 import type { DayInput } from "@/lib/itineraryWriteShared";
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       title?: string;
       summary?: string | null;
       visibility?: string;
+      tripKind?: string;
       tags?: unknown;
       days?: DayInput[];
     };
@@ -40,6 +41,9 @@ export async function POST(req: Request) {
     const visibility =
       body.visibility === "PRIVATE" ? Visibility.PRIVATE : Visibility.PUBLIC;
 
+    const tripKind =
+      body.tripKind === "WEDDING_EVENT" ? TripKind.WEDDING_EVENT : TripKind.VACATION;
+
     const tagNames = normalizeTags(body.tags);
     const slug = slugFromTitle(title);
     const hotScore = computeHotScore(0, new Date());
@@ -55,6 +59,7 @@ export async function POST(req: Request) {
           slug,
           summary: body.summary?.trim() || null,
           visibility,
+          tripKind,
           coverImageUrl,
           voteScore: 0,
           hotScore,

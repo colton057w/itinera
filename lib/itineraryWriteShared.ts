@@ -22,6 +22,8 @@ export type EventInput = {
   arrivalAirportName?: string | null;
   startsAt?: string | null;
   endsAt?: string | null;
+  estimatedCostMinor?: number | null;
+  currency?: string | null;
 };
 
 export type DayInput = {
@@ -55,6 +57,21 @@ export function firstCoverFromDays(days: DayInput[]): string | null {
     }
   }
   return null;
+}
+
+function parseCostMinor(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(n)) return null;
+  const i = Math.trunc(n);
+  if (i < 0 || i > 1_000_000_000) return null;
+  return i;
+}
+
+function parseCurrencyCode(raw: unknown): string | null {
+  const s = typeof raw === "string" ? raw.trim().toUpperCase() : "";
+  if (!/^[A-Z]{3}$/.test(s)) return null;
+  return s;
 }
 
 function parseRatingStars(raw: unknown): number | null {
@@ -94,6 +111,8 @@ export function buildDayCreates(
         if (!t) throw new Error("Each event needs a title");
         const isFlight = ev.type === "FLIGHT";
         const ratingStars = parseRatingStars(ev.ratingStars);
+        const estimatedCostMinor = parseCostMinor(ev.estimatedCostMinor);
+        const currency = parseCurrencyCode(ev.currency) ?? "USD";
         const media = ev.coverImageUrl
           ? {
               create: [{ url: ev.coverImageUrl, sortOrder: 0 }],
@@ -121,6 +140,8 @@ export function buildDayCreates(
           arrivalAirportName: isFlight ? ev.arrivalAirportName?.trim() || null : null,
           startsAt: isFlight ? parseIsoDate(ev.startsAt) : null,
           endsAt: isFlight ? parseIsoDate(ev.endsAt) : null,
+          estimatedCostMinor,
+          currency: estimatedCostMinor != null ? currency : null,
           media,
         };
       }),

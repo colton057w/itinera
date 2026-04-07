@@ -420,6 +420,42 @@ export function StoryEventCard({
               value={ev.ratingStars}
               onChange={(ratingStars) => updateEvent(dayId, ev.clientId, { ratingStars })}
             />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1">
+                <span className="text-xs text-neutral-500 dark:text-zinc-400">
+                  Est. cost (optional)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  value={ev.estimatedCostDollars}
+                  onChange={(e) =>
+                    updateEvent(dayId, ev.clientId, {
+                      estimatedCostDollars: e.target.value,
+                    })
+                  }
+                  placeholder="0"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-xs text-neutral-500 dark:text-zinc-400">Currency</span>
+                <select
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  value={ev.currency}
+                  onChange={(e) =>
+                    updateEvent(dayId, ev.clientId, { currency: e.target.value })
+                  }
+                >
+                  {["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "MXN"].map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <label className="block space-y-1">
               <span className="text-xs text-neutral-500 dark:text-zinc-400">Notes</span>
               <textarea
