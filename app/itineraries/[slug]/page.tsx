@@ -20,6 +20,7 @@ import { ForkVariationsSection } from "@/components/itinerary/ForkVariationsSect
 import { EventMapHighlight } from "@/components/itinerary/itinerary-map/EventMapHighlight";
 import { ItineraryMapLayout } from "@/components/itinerary/itinerary-map/ItineraryMapLayout";
 import { EventPlaceLinks } from "@/components/itinerary/EventPlaceLinks";
+import { EventMapModalButton } from "@/components/itinerary/EventMapModalButton";
 import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
 import { StarRating } from "@/components/itinerary/StarRating";
 
@@ -362,6 +363,12 @@ export default async function ItineraryPage({
                         googlePlaceId={ev.googlePlaceId}
                         googleMapsUrl={ev.googleMapsUrl}
                         websiteUrl={ev.websiteUrl}
+                        lat={ev.lat}
+                        lng={ev.lng}
+                      />
+                      <EventMapModalButton
+                        title={ev.title}
+                        location={ev.location}
                         lat={ev.lat}
                         lng={ev.lng}
                       />

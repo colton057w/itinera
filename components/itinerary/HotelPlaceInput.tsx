@@ -15,6 +15,7 @@ type PlaceDetails = {
   googleMapsUrl: string | null;
   lat: number | null;
   lng: number | null;
+  coverPhotoUrl: string | null;
 };
 
 export type HotelPlaceValue = {
@@ -23,6 +24,7 @@ export type HotelPlaceValue = {
   websiteUrl?: string;
   lat?: number;
   lng?: number;
+  coverImageUrl?: string;
   title: string;
   location: string;
 };
@@ -136,6 +138,7 @@ export function HotelPlaceInput({
         websiteUrl: d.website || undefined,
         lat: d.lat ?? undefined,
         lng: d.lng ?? undefined,
+        coverImageUrl: d.coverPhotoUrl || undefined,
         title: d.name || p.mainText,
         location: d.formattedAddress || p.secondaryText || p.mainText,
       });
@@ -188,6 +191,7 @@ export function HotelPlaceInput({
                 websiteUrl: undefined,
                 lat: undefined,
                 lng: undefined,
+                coverImageUrl: undefined,
               });
             }
           }}
