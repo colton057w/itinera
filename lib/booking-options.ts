@@ -148,7 +148,7 @@ export async function buildBookingPlan(input: BookingPlanInput): Promise<Booking
     links: draft.links,
   }));
 
-  const groups: BookingGroup[] = [
+  const groups = ([
     {
       kind: "flight",
       title: "Flights",
@@ -167,7 +167,7 @@ export async function buildBookingPlan(input: BookingPlanInput): Promise<Booking
       description: "Jump into reservation flows for meal stops and venue links mentioned in the plan.",
       items: venueItems,
     },
-  ].filter((group) => group.items.length > 0);
+  ] satisfies BookingGroup[]).filter((group) => group.items.length > 0);
 
   const tripLinks = buildTripLinks(groups);
   const livePriceCount = flightItems.filter((item) => item.priceHint).length;
