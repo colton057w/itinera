@@ -291,7 +291,6 @@ export default async function ItineraryPage({
           </>
         ) : null}
       </div>
-
       <BookingAssistant itineraryId={it.id} />
 
       <ItineraryMapLayout points={mapPoints}>
