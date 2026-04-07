@@ -3,6 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
+import { ProfileAvatarUpload } from "@/components/profile/ProfileAvatarUpload";
+import { ProfileTripCalendar } from "@/components/profile/ProfileTripCalendar";
+import { buildProfileCalendarTrips } from "@/lib/profileTripSpans";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 
@@ -81,6 +84,17 @@ export default async function ProfilePage() {
     redirect("/login?callbackUrl=/profile");
   }
 
+  const calendarRows = await prisma.itinerary.findMany({
+    where: { ownerId: session.user.id },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      days: { select: { date: true } },
+    },
+  });
+  const calendarTrips = buildProfileCalendarTrips(calendarRows);
+
   const displayName = user.name ?? user.email?.split("@")[0] ?? "Traveler";
   const initial = (displayName.slice(0, 1) || "?").toUpperCase();
 
@@ -98,14 +112,7 @@ export default async function ProfilePage() {
         <div className="relative px-6 pb-6 pt-0">
           <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
-              <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-neutral-200 text-2xl font-semibold text-neutral-600 shadow-md dark:border-zinc-900 dark:bg-zinc-700 dark:text-zinc-200">
-                {user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  initial
-                )}
-              </div>
+              <ProfileAvatarUpload currentImageUrl={user.image} initialLetter={initial} />
               <div className="pb-1">
                 <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-50">
                   {displayName}
@@ -148,6 +155,8 @@ export default async function ProfilePage() {
           </dl>
         </div>
       </section>
+
+      <ProfileTripCalendar trips={calendarTrips} />
 
       {user.starred.length > 0 ? (
         <section className="mt-10">
