@@ -125,8 +125,8 @@ export function BookingAssistant({ itineraryId }: Props) {
             </span>
           </div>
           <p className="text-xs leading-5 text-neutral-500 dark:text-zinc-500">
-            External sites don&apos;t always honor traveler or party size from the link. After each page loads, confirm
-            guests or covers match{" "}
+            OpenTable preserved party size in testing. Flight and hotel providers can still reset guest counts, so
+            confirm guests or covers match{" "}
             <span className="font-medium text-neutral-700 dark:text-zinc-400">{plan.partySize}</span> before you book.
           </p>
 

@@ -266,7 +266,7 @@ function buildFlightDrafts(day: BookingDayInput, partySize: number): FlightDraft
       const note =
         readiness === "ready"
           ? "Launches directly into an itinerary-matched flight search."
-          : "Opens a flexible flight search with the known airport details prefilled.";
+          : "Add both departure and arrival airport codes to keep traveler count on Skyscanner and open an exact search.";
 
       const draft: FlightDraft = {
         id: event.id,
@@ -356,8 +356,8 @@ function buildStayItems(args: {
         readiness,
         note:
           query && checkInDate && checkOutDate
-            ? "Check-in and checkout are prefilled from the itinerary timeline."
-            : "Add clearer hotel/location data to make stay searches more precise.",
+            ? `Check-in and checkout are prefilled from the itinerary timeline. Booking.com may still ask you to confirm ${partySize} guest${partySize === 1 ? "" : "s"} after redirect.`
+            : `Add clearer hotel/location data to make stay searches more precise. Booking.com may still ask you to confirm ${partySize} guest${partySize === 1 ? "" : "s"} after redirect.`,
         priceHint: null,
         links,
       };
