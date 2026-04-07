@@ -44,7 +44,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col bg-zinc-50 font-sans text-neutral-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Providers>
-          <header className="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/85 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/80">
+          <header className="sticky top-0 z-40 border-b border-neutral-200/90 bg-white/95 shadow-sm backdrop-blur-xl dark:border-zinc-800/90 dark:bg-zinc-950/95">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
               <nav className="flex items-center gap-6">
                 <Link
