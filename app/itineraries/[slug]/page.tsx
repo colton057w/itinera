@@ -8,7 +8,9 @@ import { buildCommentTree } from "@/lib/comments";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 import { CloneButton } from "@/components/itinerary/CloneButton";
+import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
 import { EventPlaceLinks } from "@/components/itinerary/EventPlaceLinks";
+import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
 import { StarRating } from "@/components/itinerary/StarRating";
 
 export async function generateMetadata({
@@ -67,16 +69,29 @@ export default async function ItineraryPage({
   if (!canView) notFound();
 
   let myVote = 0;
+  let myStarred = false;
   if (session?.user?.id) {
-    const v = await prisma.vote.findUnique({
-      where: {
-        userId_itineraryId: {
-          userId: session.user.id,
-          itineraryId: it.id,
+    const [v, star] = await Promise.all([
+      prisma.vote.findUnique({
+        where: {
+          userId_itineraryId: {
+            userId: session.user.id,
+            itineraryId: it.id,
+          },
         },
-      },
-    });
+      }),
+      prisma.itineraryStar.findUnique({
+        where: {
+          userId_itineraryId: {
+            userId: session.user.id,
+            itineraryId: it.id,
+          },
+        },
+        select: { userId: true },
+      }),
+    ]);
     myVote = v?.value ?? 0;
+    myStarred = Boolean(star);
   }
 
   const commentRows = await prisma.comment.findMany({
@@ -156,12 +171,14 @@ export default async function ItineraryPage({
         </div>
       ) : null}
 
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
         <CloneButton sourceId={it.id} />
+        <ItineraryStarButton itineraryId={it.id} initialStarred={myStarred} />
         {session?.user?.id === it.ownerId ? (
-          <span className="self-center text-sm text-neutral-500 dark:text-zinc-400">
-            You own this plan
-          </span>
+          <>
+            <DeleteItineraryButton itineraryId={it.id} redirectTo="/profile" />
+            <span className="text-sm text-neutral-500 dark:text-zinc-400">You own this plan</span>
+          </>
         ) : null}
       </div>
 

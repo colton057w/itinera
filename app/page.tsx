@@ -36,14 +36,20 @@ export default async function Home({
 
   const session = await auth();
   let voteMap = new Map<string, number>();
+  let starMap = new Map<string, boolean>();
   if (databaseAvailable && session?.user?.id && items.length > 0) {
-    const votes = await prisma.vote.findMany({
-      where: {
-        userId: session.user.id,
-        itineraryId: { in: items.map((i) => i.id) },
-      },
-    });
+    const ids = items.map((i) => i.id);
+    const [votes, stars] = await Promise.all([
+      prisma.vote.findMany({
+        where: { userId: session.user.id, itineraryId: { in: ids } },
+      }),
+      prisma.itineraryStar.findMany({
+        where: { userId: session.user.id, itineraryId: { in: ids } },
+        select: { itineraryId: true },
+      }),
+    ]);
     voteMap = new Map(votes.map((v) => [v.itineraryId, v.value]));
+    starMap = new Map(stars.map((s) => [s.itineraryId, true]));
   }
 
   return (
@@ -209,6 +215,7 @@ export default async function Home({
                   tags={item.tags}
                   ownerName={item.owner.name}
                   myVote={voteMap.get(item.id) ?? 0}
+                  myStarred={starMap.get(item.id) ?? false}
                 />
               </li>
             ))}

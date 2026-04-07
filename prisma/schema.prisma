@@ -69,6 +69,7 @@ model User {
   itineraries Itinerary[]
   votes       Vote[]
   comments    Comment[]
+  starred     ItineraryStar[]
 
   createdAt DateTime @default(now())
 }
@@ -95,6 +96,7 @@ model Itinerary {
   days     Day[]
   votes    Vote[]
   comments Comment[]
+  stars    ItineraryStar[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -188,6 +190,19 @@ model Vote {
   value       Int
 
   @@unique([userId, itineraryId])
+}
+
+/// User bookmark / “star” on an itinerary (separate from upvotes)
+model ItineraryStar {
+  userId      String
+  itineraryId String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@id([userId, itineraryId])
+  @@index([userId])
+  @@index([itineraryId])
 }
 
 model Comment {

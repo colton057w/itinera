@@ -2,6 +2,7 @@ import { Visibility } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 
@@ -36,6 +37,25 @@ export default async function ProfilePage() {
           itineraries: true,
           votes: true,
           comments: true,
+          starred: true,
+        },
+      },
+      starred: {
+        orderBy: { createdAt: "desc" },
+        take: 24,
+        select: {
+          createdAt: true,
+          itinerary: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              coverImageUrl: true,
+              visibility: true,
+              owner: { select: { name: true } },
+              _count: { select: { days: true } },
+            },
+          },
         },
       },
       itineraries: {
@@ -65,6 +85,7 @@ export default async function ProfilePage() {
 
   const stats = [
     { label: "Itineraries", value: user._count.itineraries },
+    { label: "Starred", value: user._count.starred },
     { label: "Votes cast", value: user._count.votes },
     { label: "Comments", value: user._count.comments },
   ];
@@ -109,7 +130,7 @@ export default async function ProfilePage() {
             </Link>
           </div>
 
-          <dl className="mt-8 grid grid-cols-3 gap-3 border-t border-neutral-100 pt-6 dark:border-zinc-800">
+          <dl className="mt-8 grid grid-cols-2 gap-3 border-t border-neutral-100 pt-6 sm:grid-cols-4 dark:border-zinc-800">
             {stats.map((s) => (
               <div
                 key={s.label}
@@ -127,6 +148,39 @@ export default async function ProfilePage() {
         </div>
       </section>
 
+      {user.starred.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-zinc-100">
+            Starred itineraries
+          </h2>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-zinc-400">
+            Trips you saved from the feed — quick links to revisit or clone.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {user.starred.map((row) => (
+              <li key={`${row.itinerary.id}-${row.createdAt.toISOString()}`}>
+                <Link
+                  href={`/itineraries/${row.itinerary.slug}`}
+                  className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2.5 text-sm transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
+                >
+                  <span className="text-amber-600 dark:text-amber-400" aria-hidden>
+                    ★
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-neutral-900 dark:text-zinc-100">
+                      {row.itinerary.title}
+                    </span>
+                    <span className="ml-2 text-xs text-neutral-500 dark:text-zinc-500">
+                      {row.itinerary._count.days} days · {row.itinerary.owner.name ?? "Planner"}
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="mt-10">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
@@ -134,7 +188,7 @@ export default async function ProfilePage() {
               Your itineraries
             </h2>
             <p className="mt-1 text-sm text-neutral-600 dark:text-zinc-400">
-              Plans you have published or keep private. Open one to edit in a future update.
+              Plans you have published or keep private. Delete a plan you no longer need.
             </p>
           </div>
         </div>
@@ -154,10 +208,10 @@ export default async function ProfilePage() {
         ) : (
           <ul className="space-y-3">
             {user.itineraries.map((it) => (
-              <li key={it.id}>
+              <li key={it.id} className="flex gap-2">
                 <Link
                   href={`/itineraries/${it.slug}`}
-                  className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+                  className="flex min-w-0 flex-1 gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
                 >
                   <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-zinc-800">
                     {it.coverImageUrl ? (
@@ -203,6 +257,11 @@ export default async function ProfilePage() {
                     ) : null}
                   </div>
                 </Link>
+                <DeleteItineraryButton
+                  itineraryId={it.id}
+                  redirectTo="/profile"
+                  variant="compact"
+                />
               </li>
             ))}
           </ul>
