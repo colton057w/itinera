@@ -2,7 +2,6 @@ import { TripKind, Visibility } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { CommentsSection } from "@/components/feed/CommentsSection";
 import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
 import { VoteControl } from "@/components/feed/VoteControl";
@@ -26,15 +25,6 @@ import { EventPlaceLinks } from "@/components/itinerary/EventPlaceLinks";
 import { ItineraryStarButton } from "@/components/itinerary/ItineraryStarButton";
 import { StarRating } from "@/components/itinerary/StarRating";
 import type { ItineraryCalendarEvent } from "@/lib/itineraryToIcs";
-
-const travelPayoutsDriveLoader = `
-  (function () {
-      var script = document.createElement("script");
-      script.async = 1;
-      script.src = 'https://emrldco.com/NTE2MDAx.js?t=516001';
-      document.head.appendChild(script);
-  })();
-`;
 
 export async function generateMetadata({
   params,
@@ -301,19 +291,7 @@ export default async function ItineraryPage({
           </>
         ) : null}
       </div>
-
       <BookingAssistant itineraryId={it.id} />
-      <Script
-        id="travelpayouts-drive"
-        strategy="afterInteractive"
-        data-noptimize="1"
-        data-cfasync="false"
-        data-wpfc-render="false"
-        seraph-accel-crit="1"
-        data-no-defer="1"
-      >
-        {travelPayoutsDriveLoader}
-      </Script>
 
       <ItineraryMapLayout points={mapPoints}>
         {it.days.map((day) => (
