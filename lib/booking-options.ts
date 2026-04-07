@@ -167,7 +167,15 @@ export async function buildBookingPlan(input: BookingPlanInput): Promise<Booking
       description: "Jump into reservation flows for meal stops and venue links mentioned in the plan.",
       items: venueItems,
     },
-  ] satisfies BookingGroup[]).filter((group) => group.items.length > 0);
+  ] satisfies BookingGroup[])
+    .filter((group) => group.items.length > 0)
+    .map((group) => ({
+      ...group,
+      items: group.items.map((item) => ({
+        ...item,
+        links: item.links.map(wrapBookingLinkForAffiliatePage),
+      })),
+    }));
 
   const tripLinks = buildTripLinks(groups);
   const livePriceCount = flightItems.filter((item) => item.priceHint).length;
@@ -742,6 +750,24 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function wrapBookingLinkForAffiliatePage(link: BookingLink): BookingLink {
+  if (!travelPayoutsMarkerEnabled()) return link;
+  if (link.provider === "Google Maps") return link;
+
+  const wrappedHref = new URL("/out", "https://itinera.local");
+  wrappedHref.searchParams.set("to", link.href);
+  wrappedHref.searchParams.set("provider", link.provider);
+
+  return {
+    ...link,
+    href: `${wrappedHref.pathname}?${wrappedHref.searchParams.toString()}`,
+  };
+}
+
 function travelPayoutsEnabled(): boolean {
   return Boolean(process.env.TRAVELPAYOUTS_TOKEN?.trim());
+}
+
+function travelPayoutsMarkerEnabled(): boolean {
+  return Boolean(process.env.TRAVELPAYOUTS_MARKER?.trim());
 }
