@@ -516,15 +516,17 @@ async function withTravelPayoutsPrice(draft: FlightDraft): Promise<FlightDraft> 
     const price = firstTravelPayoutsPrice(json, draft.destinationCode);
     if (price == null) return draft;
 
+    const liveFareLink: BookingLink = {
+      label: "Search with live fare context",
+      href: draft.links[0]?.href ?? "",
+      provider: "Travelpayouts",
+    };
+
     return {
       ...draft,
       priceHint: `${formatUsd(price)} from Travelpayouts cache`,
       links: [
-        {
-          label: "Search with live fare context",
-          href: draft.links[0]?.href ?? "",
-          provider: "Travelpayouts",
-        },
+        liveFareLink,
         ...draft.links.filter((link) => link.href.trim() !== ""),
       ].filter((link) => link.href.trim() !== ""),
     };
