@@ -44,6 +44,15 @@ function normalizedIata(raw: string | null | undefined): string | null {
   return clean;
 }
 
+function parseIataCodes(raw: string): string[] {
+  const matches = raw.toUpperCase().match(/\b[A-Z]{3}\b/g) ?? [];
+  const out: string[] = [];
+  for (const code of matches) {
+    if (!out.includes(code)) out.push(code);
+  }
+  return out;
+}
+
 function asSearchQuery(parts: Array<string | null | undefined>): string {
   return parts
     .map((part) => part?.trim() ?? "")
@@ -68,7 +77,7 @@ function collectTimelineBounds(days: BookingDayLike[]): { start: Date | null; en
 
 function buildTravelpayoutsFlightSearchUrl(opts: {
   originIata: string;
-  destinationIata: string;
+  destinationIata?: string | null;
   departDate: string;
   returnDate?: string | null;
   adults?: number;
@@ -76,7 +85,9 @@ function buildTravelpayoutsFlightSearchUrl(opts: {
 }): string {
   const url = new URL("https://search.aviasales.com/flights/");
   url.searchParams.set("origin_iata", opts.originIata);
-  url.searchParams.set("destination_iata", opts.destinationIata);
+  if (opts.destinationIata?.trim()) {
+    url.searchParams.set("destination_iata", opts.destinationIata.trim());
+  }
   url.searchParams.set("depart_date", opts.departDate);
   if (opts.returnDate) {
     url.searchParams.set("return_date", opts.returnDate);
@@ -168,15 +179,22 @@ export function buildOneClickBookingModel(opts: {
         startsAt: ev.startsAt,
         departureAirportCode: normalizedIata(ev.departureAirportCode),
         arrivalAirportCode: normalizedIata(ev.arrivalAirportCode),
+        title: ev.title,
+        location: ev.location,
         type: ev.type,
       })),
     )
-    .filter(
-      (ev) =>
-        ev.type === "FLIGHT" &&
-        ev.departureAirportCode != null &&
-        ev.arrivalAirportCode != null,
-    );
+    .filter((ev) => ev.type === "FLIGHT")
+    .map((ev) => {
+      const extracted = parseIataCodes(`${ev.title} ${ev.location ?? ""}`);
+      const departure = ev.departureAirportCode ?? extracted[0] ?? null;
+      const arrival = ev.arrivalAirportCode ?? extracted[1] ?? null;
+      return {
+        ...ev,
+        departureAirportCode: departure,
+        arrivalAirportCode: arrival,
+      };
+    });
 
   const bounds = collectTimelineBounds(sortedDays);
   const tripStart = bounds.start;
@@ -222,22 +240,28 @@ export function buildOneClickBookingModel(opts: {
   const stackLinks: BookingLinkOption[] = [];
   const quickLinks: BookingLinkOption[] = [];
 
-  if (
-    firstFlight?.departureAirportCode &&
-    firstFlight?.arrivalAirportCode &&
-    departDate
-  ) {
+  const inferredDestination =
+    firstFlight?.arrivalAirportCode ??
+    flights.find(
+      (f) =>
+        f.departureAirportCode &&
+        firstFlight?.departureAirportCode &&
+        f.departureAirportCode !== firstFlight.departureAirportCode,
+    )?.departureAirportCode ??
+    null;
+
+  if (firstFlight?.departureAirportCode && departDate) {
     stackLinks.push({
       label: "Find flights (Travelpayouts / Aviasales)",
       href: buildTravelpayoutsFlightSearchUrl({
         originIata: firstFlight.departureAirportCode,
-        destinationIata: firstFlight.arrivalAirportCode,
+        destinationIata: inferredDestination,
         departDate,
         returnDate,
         adults: opts.adults,
         marker: opts.travelpayoutsMarker,
       }),
-      note: "Prefilled from itinerary flight legs and dates.",
+      note: "Prefilled from itinerary flight legs and dates (best available route data).",
     });
   }
 
