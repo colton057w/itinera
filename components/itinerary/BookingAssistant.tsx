@@ -124,6 +124,11 @@ export function BookingAssistant({ itineraryId }: Props) {
               {plan.partySize} traveler{plan.partySize === 1 ? "" : "s"} | {plan.roomCount} room
             </span>
           </div>
+          <p className="text-xs leading-5 text-neutral-500 dark:text-zinc-500">
+            External sites don&apos;t always honor traveler or party size from the link. After each page loads, confirm
+            guests or covers match{" "}
+            <span className="font-medium text-neutral-700 dark:text-zinc-400">{plan.partySize}</span> before you book.
+          </p>
 
           {plan.warnings.length ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">

@@ -120,7 +120,7 @@ export async function buildBookingPlan(input: BookingPlanInput): Promise<Booking
   const tripStart = firstDefinedDate(days.map((day) => day.date));
   const tripEnd = lastDefinedDate(days.map((day) => day.date));
 
-  const flightDrafts = days.flatMap((day) => buildFlightDrafts(day));
+  const flightDrafts = days.flatMap((day) => buildFlightDrafts(day, partySize));
   const pricedFlights = await Promise.all(flightDrafts.map((draft) => withTravelPayoutsPrice(draft)));
 
   const stayItems = days.flatMap((day, index) =>
@@ -244,14 +244,14 @@ function buildWarnings(args: {
   return warnings;
 }
 
-function buildFlightDrafts(day: BookingDayInput): FlightDraft[] {
+function buildFlightDrafts(day: BookingDayInput, partySize: number): FlightDraft[] {
   return day.events
     .filter((event) => event.type === "FLIGHT")
     .map((event) => {
       const date = firstDefinedDate([event.startsAt, day.date]);
       const departDate = toIsoDate(date);
       const codes = inferFlightCodes(event);
-      const links = buildFlightLinks(codes.originCode, codes.destinationCode, departDate);
+      const links = buildFlightLinks(codes.originCode, codes.destinationCode, departDate, partySize);
       const readiness: BookingReadiness =
         codes.originCode && codes.destinationCode && departDate ? "ready" : "needs-details";
       const timing = formatTiming(event.startsAt, event.endsAt, day.date);
@@ -290,6 +290,7 @@ function buildFlightLinks(
   originCode: string | null,
   destinationCode: string | null,
   departDate: string | null,
+  partySize: number,
 ): BookingLink[] {
   if (!departDate || (!originCode && !destinationCode)) {
     return [];
@@ -305,6 +306,7 @@ function buildFlightLinks(
   if (originCode) url.searchParams.set("origin", originCode.toLowerCase());
   if (destinationCode) url.searchParams.set("destination", destinationCode.toLowerCase());
   url.searchParams.set("outboundDate", departDate);
+  url.searchParams.set("adultsv2", String(partySize));
   if (partnerId) url.searchParams.set("mediaPartnerId", partnerId);
 
   return [{ label: "Search on Skyscanner", href: url.toString(), provider: "Skyscanner" }];
@@ -381,6 +383,7 @@ function buildStayLinks(args: {
     bookingUrl.searchParams.set("checkin", args.checkIn);
     bookingUrl.searchParams.set("checkout", args.checkOut);
     bookingUrl.searchParams.set("group_adults", String(args.partySize));
+    bookingUrl.searchParams.set("group_children", "0");
     bookingUrl.searchParams.set("no_rooms", String(args.roomCount));
 
     const affiliateId = process.env.BOOKING_AFFILIATE_ID?.trim();
@@ -463,11 +466,16 @@ function buildVenueLinks(args: {
   const links: BookingLink[] = [];
 
   if (args.type === "MEAL" && args.query) {
-    const openTable = new URL("https://www.opentable.com/s/");
+    const openTable = new URL("https://www.opentable.com/s");
     openTable.searchParams.set("term", args.query);
     openTable.searchParams.set("covers", String(args.partySize));
-    if (args.date) openTable.searchParams.set("date", args.date);
-    if (args.time) openTable.searchParams.set("time", args.time);
+    openTable.searchParams.set("people", String(args.partySize));
+    if (args.date && args.time) {
+      openTable.searchParams.set("dateTime", `${args.date}T${args.time}:00`);
+    } else {
+      if (args.date) openTable.searchParams.set("date", args.date);
+      if (args.time) openTable.searchParams.set("time", args.time);
+    }
     links.push({
       label: "Search on OpenTable",
       href: openTable.toString(),
