@@ -17,6 +17,7 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
     "@prisma/client": "^6.19.0",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
