@@ -252,7 +252,7 @@ function buildFlightDrafts(day: BookingDayInput): FlightDraft[] {
       const departDate = toIsoDate(date);
       const codes = inferFlightCodes(event);
       const links = buildFlightLinks(codes.originCode, codes.destinationCode, departDate);
-      const readiness =
+      const readiness: BookingReadiness =
         codes.originCode && codes.destinationCode && departDate ? "ready" : "needs-details";
       const timing = formatTiming(event.startsAt, event.endsAt, day.date);
       const routeLabel =
@@ -328,6 +328,8 @@ function buildStayItems(args: {
         firstLaterDate(checkInDate, [event.endsAt, nextHotelDate, nextDay?.date ?? null, tripEnd]) ??
         addDays(checkInDate, 1);
       const query = bestLodgingQuery(event);
+      const readiness: BookingReadiness =
+        query && checkInDate && checkOutDate ? "ready" : "needs-details";
       const timing =
         checkInDate && checkOutDate
           ? `${formatDateLabel(checkInDate)} - ${formatDateLabel(checkOutDate)}`
@@ -348,7 +350,7 @@ function buildStayItems(args: {
         title: event.title,
         detail: query || event.location?.trim() || "Lodging details still needed",
         timing,
-        readiness: query && checkInDate && checkOutDate ? "ready" : "needs-details",
+        readiness,
         note:
           query && checkInDate && checkOutDate
             ? "Check-in and checkout are prefilled from the itinerary timeline."
@@ -415,6 +417,9 @@ function buildVenueItems(day: BookingDayInput, partySize: number): BookingItem[]
       const query = bestVenueQuery(event);
       const date = firstDefinedDate([event.startsAt, day.date]);
       const timing = event.type === "MEAL" ? formatMealTiming(event, day.date) : formatTiming(event.startsAt, event.endsAt, day.date);
+      const readiness: BookingReadiness = event.type === "MEAL" || event.websiteUrl?.trim() || buildMapsHref(event)
+        ? "ready"
+        : "needs-details";
       const links = buildVenueLinks({
         type: event.type,
         query,
@@ -431,7 +436,7 @@ function buildVenueItems(day: BookingDayInput, partySize: number): BookingItem[]
         title: event.title,
         detail: event.location?.trim() || query || "Venue details still needed",
         timing,
-        readiness: links.length > 0 ? "ready" : "needs-details",
+        readiness,
         note:
           event.type === "MEAL"
             ? "Searches reservation platforms and venue links from the itinerary stop."
