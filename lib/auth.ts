@@ -1,6 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { promoteAdminByEmailList } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
@@ -37,7 +38,12 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (user?.id) token.id = user.id;
+      if (user?.id) {
+        token.id = user.id;
+        if (user.email) {
+          await promoteAdminByEmailList(user.email);
+        }
+      }
       if (user?.image) token.picture = user.image;
       if (trigger === "update" && session?.image && typeof session.image === "string") {
         token.picture = session.image;
@@ -47,6 +53,11 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token, trigger, newSession }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        const u = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        session.user.role = u?.role === "ADMIN" ? "ADMIN" : "MEMBER";
       }
       if (session.user && token.picture) {
         session.user.image = token.picture as string;

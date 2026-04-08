@@ -1,0 +1,309 @@
+import { Visibility } from "@prisma/client";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { TripCoverVisual } from "@/components/feed/TripCoverVisual";
+import { DeleteItineraryButton } from "@/components/itinerary/DeleteItineraryButton";
+import { ProfileTripCalendar } from "@/components/profile/ProfileTripCalendar";
+import { isUserAdmin } from "@/lib/admin";
+import { buildProfileCalendarTrips } from "@/lib/profileTripSpans";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/session";
+
+type Props = { params: Promise<{ userId: string }> };
+
+function formatJoinDate(d: Date) {
+  return d.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { userId } = await params;
+  try {
+    const u = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+    if (!u) return { title: "User · Admin · Itinera" };
+    const label = u.name ?? u.email?.split("@")[0] ?? "User";
+    return { title: `${label} · Admin · Itinera` };
+  } catch {
+    return { title: "User · Admin · Itinera" };
+  }
+}
+
+export default async function AdminUserProfilePage({ params }: Props) {
+  const { userId } = await params;
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect(`/login?callbackUrl=/admin/users/${userId}`);
+  }
+  if (!(await isUserAdmin(session.user.id))) {
+    redirect("/");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      role: true,
+      createdAt: true,
+      emailVerified: true,
+      _count: {
+        select: {
+          itineraries: true,
+          votes: true,
+          comments: true,
+          starred: true,
+        },
+      },
+      starred: {
+        orderBy: { createdAt: "desc" },
+        take: 24,
+        select: {
+          createdAt: true,
+          itinerary: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              coverImageUrl: true,
+              visibility: true,
+              owner: { select: { name: true } },
+              _count: { select: { days: true } },
+            },
+          },
+        },
+      },
+      itineraries: {
+        orderBy: { updatedAt: "desc" },
+        take: 48,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          summary: true,
+          coverImageUrl: true,
+          visibility: true,
+          voteScore: true,
+          updatedAt: true,
+          _count: { select: { days: true } },
+          tags: { include: { tag: true } },
+        },
+      },
+    },
+  });
+
+  if (!user) notFound();
+
+  const calendarRows = await prisma.itinerary.findMany({
+    where: { ownerId: userId },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      days: { select: { date: true } },
+    },
+  });
+  const calendarTrips = buildProfileCalendarTrips(calendarRows);
+
+  const displayName = user.name ?? user.email?.split("@")[0] ?? "Traveler";
+  const initial = (displayName.slice(0, 1) || "?").toUpperCase();
+  const backHref = "/admin/users";
+  const afterDeleteHref = `/admin/users/${userId}`;
+
+  const stats = [
+    { label: "Itineraries", value: user._count.itineraries },
+    { label: "Starred", value: user._count.starred },
+    { label: "Votes cast", value: user._count.votes },
+    { label: "Comments", value: user._count.comments },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-10">
+      <Link
+        href={backHref}
+        className="text-sm font-medium text-neutral-600 underline-offset-4 hover:text-neutral-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100"
+      >
+        ← All users
+      </Link>
+
+      <section className="mt-6 overflow-hidden rounded-2xl border border-amber-200/80 bg-white shadow-sm dark:border-amber-900/40 dark:bg-zinc-900">
+        <div className="h-24 bg-gradient-to-br from-amber-600/85 via-amber-700/70 to-zinc-800 dark:from-amber-900/70 dark:via-amber-950/60 dark:to-zinc-950" />
+        <div className="relative px-6 pb-6 pt-0">
+          <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-end gap-4">
+              <span className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-neutral-200 text-2xl font-semibold text-neutral-700 shadow-md dark:border-zinc-900 dark:bg-zinc-700 dark:text-zinc-200">
+                {user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initial
+                )}
+              </span>
+              <div className="pb-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                  Admin view
+                </p>
+                <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-zinc-50">
+                  {displayName}
+                  {user.role === "ADMIN" ? (
+                    <span className="ml-2 text-amber-600 dark:text-amber-400" title="Admin">
+                      👑
+                    </span>
+                  ) : null}
+                </h1>
+                {user.email ? (
+                  <p className="mt-0.5 text-sm text-neutral-600 dark:text-zinc-400">{user.email}</p>
+                ) : null}
+                <p className="mt-1 text-xs text-neutral-500 dark:text-zinc-500">
+                  Member since {formatJoinDate(user.createdAt)}
+                  <span className="ml-2 capitalize">· {user.role.toLowerCase()}</span>
+                  {user.emailVerified ? (
+                    <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                      Verified email
+                    </span>
+                  ) : null}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <dl className="mt-8 grid grid-cols-2 gap-3 border-t border-neutral-100 pt-6 sm:grid-cols-4 dark:border-zinc-800">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="rounded-xl bg-neutral-50 px-3 py-3 text-center dark:bg-zinc-800/60"
+              >
+                <dd className="text-xl font-semibold tabular-nums text-neutral-900 dark:text-zinc-100">
+                  {s.value}
+                </dd>
+                <dt className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-zinc-400">
+                  {s.label}
+                </dt>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <ProfileTripCalendar trips={calendarTrips} />
+
+      {user.starred.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-zinc-100">
+            Starred itineraries
+          </h2>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-zinc-400">
+            Trips this member saved from the feed.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {user.starred.map((row) => (
+              <li key={`${row.itinerary.id}-${row.createdAt.toISOString()}`}>
+                <Link
+                  href={`/itineraries/${row.itinerary.slug}`}
+                  className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2.5 text-sm transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
+                >
+                  <span className="text-amber-600 dark:text-amber-400" aria-hidden>
+                    ★
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-neutral-900 dark:text-zinc-100">
+                      {row.itinerary.title}
+                    </span>
+                    <span className="ml-2 text-xs text-neutral-500 dark:text-zinc-500">
+                      {row.itinerary._count.days} days · {row.itinerary.owner.name ?? "Planner"}
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section className="mt-10">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-zinc-100">
+            Their itineraries
+          </h2>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-zinc-400">
+            Edit or delete any plan as an admin.
+          </p>
+        </div>
+
+        {user.itineraries.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/80 px-6 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
+            <p className="text-sm text-neutral-600 dark:text-zinc-400">No itineraries yet.</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {user.itineraries.map((it) => (
+              <li key={it.id} className="flex gap-2">
+                <Link
+                  href={`/itineraries/${it.slug}`}
+                  className="flex min-w-0 flex-1 gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+                >
+                  <TripCoverVisual
+                    variant="profile"
+                    coverImageUrl={it.coverImageUrl}
+                    title={it.title}
+                    summary={it.summary}
+                    tags={it.tags.map((t) => t.tag.name)}
+                  />
+                  <div className="min-w-0 flex-1 py-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-neutral-900 dark:text-zinc-100">
+                        {it.title}
+                      </h3>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          it.visibility === Visibility.PUBLIC
+                            ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200"
+                            : "bg-neutral-200 text-neutral-800 dark:bg-zinc-700 dark:text-zinc-200"
+                        }`}
+                      >
+                        {it.visibility === Visibility.PUBLIC ? "Public" : "Private"}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-neutral-500 dark:text-zinc-500">
+                      {it._count.days} days · {it.voteScore} pts · Updated{" "}
+                      {it.updatedAt.toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                    {it.summary ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-neutral-600 dark:text-zinc-400">
+                        {it.summary}
+                      </p>
+                    ) : null}
+                  </div>
+                </Link>
+                <div className="flex shrink-0 flex-col justify-center gap-2">
+                  <Link
+                    href={`/itineraries/${it.slug}/edit`}
+                    className="rounded-lg border border-neutral-200 px-2.5 py-1.5 text-center text-xs font-medium text-neutral-800 hover:bg-neutral-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteItineraryButton
+                    itineraryId={it.id}
+                    redirectTo={afterDeleteHref}
+                    variant="compact"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}

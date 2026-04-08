@@ -38,6 +38,7 @@ export function NavAuth() {
   const email = session.user?.email ?? null;
   const imageUrl = session.user?.image ?? null;
   const initial = avatarLetter(session.user?.name, email);
+  const isAdmin = session.user?.role === "ADMIN";
 
   return (
     <details className="group relative">
@@ -49,8 +50,22 @@ export function NavAuth() {
           ) : (
             initial
           )}
+          {isAdmin ? (
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[10px] leading-none shadow dark:bg-amber-900/90 sm:hidden"
+              title="Admin"
+              aria-label="Admin"
+            >
+              👑
+            </span>
+          ) : null}
         </span>
         <span className="hidden max-w-[9rem] truncate text-sm font-medium text-neutral-800 dark:text-zinc-200 sm:inline">
+          {isAdmin ? (
+            <span className="mr-1 inline-block text-amber-600 dark:text-amber-400" title="Admin" aria-label="Admin">
+              👑
+            </span>
+          ) : null}
           {display}
         </span>
         <span className="text-neutral-400 group-open:rotate-180 dark:text-zinc-500" aria-hidden>
@@ -60,6 +75,11 @@ export function NavAuth() {
       <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
         <div className="border-b border-neutral-100 px-3 py-2 dark:border-zinc-800">
           <p className="truncate text-sm font-medium text-neutral-900 dark:text-zinc-100">
+            {isAdmin ? (
+              <span className="mr-1 text-amber-600 dark:text-amber-400" title="Admin" aria-label="Admin">
+                👑
+              </span>
+            ) : null}
             {display}
           </p>
           {email ? (
@@ -72,6 +92,14 @@ export function NavAuth() {
         >
           Your profile
         </Link>
+        {isAdmin ? (
+          <Link
+            href="/admin/users"
+            className="block px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/40"
+          >
+            Admin · Users
+          </Link>
+        ) : null}
         <Link
           href="/forum"
           className="block px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-zinc-300 dark:hover:bg-zinc-800"

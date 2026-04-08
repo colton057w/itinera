@@ -8,6 +8,7 @@ import {
   normalizeTags,
   upsertTagsAndCollectIds,
 } from "@/lib/itineraryWriteShared";
+import { isUserAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 
@@ -37,7 +38,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (existing.ownerId !== session.user.id) {
+  const admin = await isUserAdmin(session.user.id);
+  if (existing.ownerId !== session.user.id && !admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -125,7 +127,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (it.ownerId !== session.user.id) {
+  const admin = await isUserAdmin(session.user.id);
+  if (it.ownerId !== session.user.id && !admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

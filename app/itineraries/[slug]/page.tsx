@@ -9,6 +9,7 @@ import { buildCommentTree } from "@/lib/comments";
 import { buildItineraryMapPoints } from "@/lib/buildItineraryMapPoints";
 import { highSpendEventIds } from "@/lib/budgetHighlights";
 import { formatMinorUnits } from "@/lib/formatMoney";
+import { isUserAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 import { venueClosureHint } from "@/lib/venueClosureHints";
@@ -46,6 +47,7 @@ export default async function ItineraryPage({
 }) {
   const { slug } = await params;
   const session = await auth();
+  const isAdmin = session?.user?.id ? await isUserAdmin(session.user.id) : false;
 
   const it = await prisma.itinerary.findUnique({
     where: { slug },
@@ -78,7 +80,8 @@ export default async function ItineraryPage({
 
   const canView =
     it.visibility === Visibility.PUBLIC ||
-    (session?.user?.id && session.user.id === it.ownerId);
+    (session?.user?.id && session.user.id === it.ownerId) ||
+    isAdmin;
   if (!canView) notFound();
 
   let myVote = 0;
@@ -156,6 +159,7 @@ export default async function ItineraryPage({
   const showForkLink =
     it.forkedFrom &&
     (it.forkedFrom.visibility === Visibility.PUBLIC ||
+      isAdmin ||
       (session?.user?.id &&
         (session.user.id === it.forkedFrom.ownerId ||
           session.user.id === it.ownerId)));
@@ -195,6 +199,17 @@ export default async function ItineraryPage({
                 <span>
                   By {it.owner.name ?? "Planner"}
                   {it.days.length ? ` · ${it.days.length} days` : null}
+                  {isAdmin ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/admin/users/${it.owner.id}`}
+                        className="font-medium text-amber-700 hover:underline dark:text-amber-400"
+                      >
+                        Full profile (admin)
+                      </Link>
+                    </>
+                  ) : null}
                 </span>
                 {it.tripKind === TripKind.WEDDING_EVENT ? (
                   <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
@@ -266,7 +281,7 @@ export default async function ItineraryPage({
           premiumCloneEnabled={it.premiumCloneEnabled}
           premiumClonePriceCents={it.premiumClonePriceCents}
           premiumCloneCurrency={it.premiumCloneCurrency}
-          skipPremiumGate={session?.user?.id === it.ownerId}
+          skipPremiumGate={session?.user?.id === it.ownerId || isAdmin}
         />
         <ExportToCalendarButton itineraryTitle={it.title} events={exportEvents} />
         {guestPortalEligible ? (
@@ -278,7 +293,7 @@ export default async function ItineraryPage({
           </Link>
         ) : null}
         <ItineraryStarButton itineraryId={it.id} initialStarred={myStarred} />
-        {session?.user?.id === it.ownerId ? (
+        {session?.user?.id && (session.user.id === it.ownerId || isAdmin) ? (
           <>
             <Link
               href={`/itineraries/${it.slug}/edit`}
@@ -286,8 +301,15 @@ export default async function ItineraryPage({
             >
               Edit itinerary
             </Link>
-            <DeleteItineraryButton itineraryId={it.id} redirectTo="/profile" />
-            <span className="text-sm text-neutral-500 dark:text-zinc-400">You own this plan</span>
+            <DeleteItineraryButton
+              itineraryId={it.id}
+              redirectTo={isAdmin && session.user.id !== it.ownerId ? "/" : "/profile"}
+            />
+            <span className="text-sm text-neutral-500 dark:text-zinc-400">
+              {session.user.id === it.ownerId
+                ? "You own this plan"
+                : "Admin · moderating this plan"}
+            </span>
           </>
         ) : null}
       </div>

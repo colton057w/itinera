@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ForumThreadAdminBar } from "@/components/forum/ForumThreadAdminBar";
 import { ForumReplyForm } from "@/components/forum/ForumReplyForm";
+import { isUserAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/session";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -44,6 +47,10 @@ export default async function ForumThreadPage({ params }: Props) {
 
   if (!post) notFound();
 
+  const session = await auth();
+  const isAdmin =
+    session?.user?.id != null ? await isUserAdmin(session.user.id) : false;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
       <Link
@@ -52,6 +59,17 @@ export default async function ForumThreadPage({ params }: Props) {
       >
         ← Forum
       </Link>
+
+      {isAdmin ? (
+        <div className="mt-6">
+          <ForumThreadAdminBar
+            postId={post.id}
+            initialTitle={post.title}
+            initialBody={post.body}
+            replies={post.replies.map((r) => ({ id: r.id, body: r.body }))}
+          />
+        </div>
+      ) : null}
 
       <article className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-950 dark:text-white">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { StorybookBuilder } from "@/components/itinerary/storybook/StorybookBuilder";
+import { isUserAdmin } from "@/lib/admin";
 import { itineraryDaysToDraft } from "@/lib/itineraryDbToDraft";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
@@ -43,7 +44,8 @@ export default async function EditItineraryPage({
   });
 
   if (!it) notFound();
-  if (it.ownerId !== session.user.id) notFound();
+  const admin = await isUserAdmin(session.user.id);
+  if (it.ownerId !== session.user.id && !admin) notFound();
 
   const initialDays = itineraryDaysToDraft(it.days);
   const initialTagsInput = it.tags.map((t) => t.tag.name).join(", ");
