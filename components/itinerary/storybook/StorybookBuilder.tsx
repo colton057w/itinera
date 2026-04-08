@@ -7,6 +7,7 @@ import {
   buildItineraryRequestBody,
   parseTagsInput,
 } from "@/lib/buildItineraryRequestBody";
+import { readAndClearExperienceQueue, queuedToEventDraft } from "@/lib/experience-queue";
 import { StoryEventCard } from "./StoryEventCard";
 import type { DayDraft, EventDraft, StoryKind } from "./types";
 import { createQuickEvent, newId } from "./types";
@@ -87,6 +88,37 @@ export function StorybookBuilder({
     const t = window.setTimeout(() => setEnteringEventId(null), 480);
     return () => window.clearTimeout(t);
   }, [enteringEventId]);
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    const list = readAndClearExperienceQueue();
+    if (!list.length) return;
+    const drafts = list.map(queuedToEventDraft);
+    setDays((d) => {
+      if (d.length === 0) {
+        return [
+          {
+            clientId: newId(),
+            label: "Day 1",
+            date: "",
+            events: drafts,
+          },
+        ];
+      }
+      const first = d[0];
+      if (!first) {
+        return d;
+      }
+      return [{ ...first, events: [...first.events, ...drafts] }, ...d.slice(1)];
+    });
+    const last = drafts[drafts.length - 1];
+    if (last) setEnteringEventId(last.clientId);
+    setTitle((t) => {
+      const city = list[0]?.cityName;
+      if (t.trim() || !city) return t;
+      return `Ideas for ${city}`;
+    });
+  }, [mode]);
 
   const updateEvent = useCallback(
     (dayId: string, eventId: string, patch: Partial<EventDraft>) => {

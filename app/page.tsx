@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { FeedCard } from "@/components/feed/FeedCard";
+import { TripKindFilterPills } from "@/components/feed/TripKindFilterPills";
+import { FeatureShowcaseTabs } from "@/components/marketing/FeatureShowcaseTabs";
+import { TopAttractionsSection } from "@/components/marketing/TopAttractionsSection";
+import { TopCitiesSection } from "@/components/marketing/TopCitiesSection";
+import { getCuratedCities, getTopAttractions } from "@/lib/curated-destinations";
 import { queryFeed, type TripKindFilter } from "@/lib/feed";
+import { loadMarketingShowcase } from "@/lib/marketing-showcase";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/session";
 
@@ -12,12 +18,6 @@ type Search = {
   /** empty | vacation | wedding */
   kind?: string;
 };
-
-const kindOptions = [
-  { value: "", label: "All trips" },
-  { value: "vacation", label: "Vacations" },
-  { value: "wedding", label: "Weddings & events" },
-] as const;
 
 const featureCards = [
   {
@@ -64,7 +64,7 @@ export default async function Home({
   if (sp.kind === "vacation") tripKind = "VACATION";
   else if (sp.kind === "wedding") tripKind = "WEDDING_EVENT";
 
-  const kindParam =
+  const kindParam: "" | "vacation" | "wedding" =
     sp.kind === "vacation" || sp.kind === "wedding" ? sp.kind : "";
 
   const onVercel = process.env.VERCEL === "1";
@@ -72,15 +72,20 @@ export default async function Home({
   const databaseUrlLooksLocal =
     databaseUrl.length > 0 && /localhost|127\.0\.0\.1/i.test(databaseUrl);
 
-  const { items, databaseAvailable } = await queryFeed({
-    vibe: vibe ?? null,
-    location: location ?? null,
-    durationMin: durationMin && !Number.isNaN(durationMin) ? durationMin : null,
-    durationMax: durationMax && !Number.isNaN(durationMax) ? durationMax : null,
-    tripKind,
-  });
-
   const session = await auth();
+
+  const [{ items, databaseAvailable }, cities, attractions, showcaseData] = await Promise.all([
+    queryFeed({
+      vibe: vibe ?? null,
+      location: location ?? null,
+      durationMin: durationMin && !Number.isNaN(durationMin) ? durationMin : null,
+      durationMax: durationMax && !Number.isNaN(durationMax) ? durationMax : null,
+      tripKind,
+    }),
+    getCuratedCities(),
+    getTopAttractions(),
+    loadMarketingShowcase(session?.user?.id ?? null),
+  ]);
   let voteMap = new Map<string, number>();
   let starMap = new Map<string, boolean>();
   if (databaseAvailable && session?.user?.id && items.length > 0) {
@@ -322,6 +327,8 @@ export default async function Home({
           </div>
         </section>
 
+        <FeatureShowcaseTabs data={showcaseData} />
+
         <section
           id="discover"
           className="mt-16 rounded-[2rem] border border-neutral-200 bg-white/90 p-6 shadow-sm backdrop-blur sm:p-8 dark:border-zinc-800 dark:bg-zinc-900/90"
@@ -362,27 +369,14 @@ export default async function Home({
                 <legend className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500 dark:text-zinc-500">
                   Trip type
                 </legend>
-                <div className="mt-3 inline-flex flex-wrap rounded-full border border-neutral-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900">
-                  {kindOptions.map((opt) => (
-                    <label
-                      key={opt.value || "all"}
-                      className={`cursor-pointer rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                        kindParam === opt.value
-                          ? "bg-neutral-950 text-white shadow-sm dark:bg-white dark:text-zinc-950"
-                          : "text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-200"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="kind"
-                        value={opt.value}
-                        defaultChecked={kindParam === opt.value}
-                        className="sr-only"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
+                <TripKindFilterPills
+                  variant="discover"
+                  kindParam={kindParam}
+                  vibe={vibe ?? ""}
+                  location={location ?? ""}
+                  durationMin={sp.durationMin ?? ""}
+                  durationMax={sp.durationMax ?? ""}
+                />
               </fieldset>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -571,6 +565,9 @@ export default async function Home({
             )}
           </div>
         </section>
+
+        <TopCitiesSection cities={cities} />
+        <TopAttractionsSection attractions={attractions} />
       </div>
     </div>
   );

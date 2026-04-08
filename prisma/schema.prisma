@@ -272,3 +272,67 @@ model CommentVote {
   @@id([userId, commentId])
   @@index([commentId])
 }
+
+/// Curated destination marketing content (replaces static JSON; editable via seed/CMS later)
+enum CuratedExperienceKind {
+  ACTIVITY
+  MEAL
+  STAY
+  TRANSIT
+}
+
+model CuratedCity {
+  id            String               @id @default(cuid())
+  slug          String               @unique
+  name          String
+  country       String
+  tagline       String
+  heroImageUrl  String
+  sortOrder     Int                  @default(0)
+  experiences   CuratedExperience[]
+  attractions   CuratedAttraction[]
+  createdAt     DateTime             @default(now())
+}
+
+model CuratedExperience {
+  id              String                 @id @default(cuid())
+  cityId          String
+  city            CuratedCity            @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  experienceKey   String
+  title          String
+  subtitle       String
+  imageUrl       String
+  locationLabel  String
+  storyKind      CuratedExperienceKind  @default(ACTIVITY)
+  sortOrder      Int                    @default(0)
+
+  @@unique([cityId, experienceKey])
+  @@index([cityId, sortOrder])
+}
+
+model CuratedAttraction {
+  id        String      @id @default(cuid())
+  cityId    String
+  city      CuratedCity @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  title     String
+  imageUrl  String
+  sortOrder Int         @default(0)
+
+  @@index([cityId, sortOrder])
+}
+
+/// Flight deal rows for marketing (seeded; extend via your own jobs or admin)
+model MarketFlightDeal {
+  id          String   @id @default(cuid())
+  headline    String
+  subline     String?
+  originCode  String?
+  destCode    String?
+  priceHint   String?
+  tag         String?
+  source      String   @default("seed")
+  fetchedAt   DateTime @default(now())
+  sortOrder   Int      @default(0)
+
+  @@index([sortOrder])
+}
