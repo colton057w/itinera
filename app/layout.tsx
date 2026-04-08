@@ -55,8 +55,14 @@ export default function RootLayout({
                   Itinera
                 </Link>
                 <Link
+                  href="/forum"
+                  className="text-sm font-medium text-neutral-700 hover:text-neutral-900 dark:text-zinc-300 dark:hover:text-white"
+                >
+                  Forum
+                </Link>
+                <Link
                   href="/itineraries/new"
-                  className="hidden text-sm font-medium text-neutral-700 hover:text-neutral-900 dark:text-zinc-300 dark:hover:text-white sm:inline-flex"
+                  className="text-sm font-medium text-neutral-700 hover:text-neutral-900 dark:text-zinc-300 dark:hover:text-white"
                 >
                   New itinerary
                 </Link>

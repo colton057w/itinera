@@ -73,6 +73,12 @@ export function NavAuth() {
           Your profile
         </Link>
         <Link
+          href="/forum"
+          className="block px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Forum
+        </Link>
+        <Link
           href="/itineraries/new"
           className="block px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >

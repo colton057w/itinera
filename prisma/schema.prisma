@@ -77,6 +77,8 @@ model User {
   comments    Comment[]
   commentVotes CommentVote[]
   starred     ItineraryStar[]
+  forumPosts  ForumPost[]
+  forumReplies ForumReply[]
 
   createdAt DateTime @default(now())
 }
@@ -335,4 +337,30 @@ model MarketFlightDeal {
   sortOrder   Int      @default(0)
 
   @@index([sortOrder])
+}
+
+/// Community forum threads (separate from itinerary comments)
+model ForumPost {
+  id        String       @id @default(cuid())
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  body      String       @db.Text
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  replies   ForumReply[]
+
+  @@index([createdAt(sort: Desc)])
+}
+
+model ForumReply {
+  id        String    @id @default(cuid())
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String    @db.Text
+  createdAt DateTime  @default(now())
+
+  @@index([postId, createdAt])
 }
