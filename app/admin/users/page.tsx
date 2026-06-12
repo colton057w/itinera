@@ -59,12 +59,8 @@ export default async function AdminUsersPage() {
                 <p className="truncate font-medium text-neutral-900 dark:text-zinc-100">
                   {u.name ?? u.email?.split("@")[0] ?? "User"}
                   {u.role === "ADMIN" ? (
-                    <span
-                      className="ml-2 text-amber-600 dark:text-amber-400"
-                      title="Admin"
-                      aria-label="Admin"
-                    >
-                      👑
+                    <span className="ml-2 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                      Admin
                     </span>
                   ) : null}
                 </p>

@@ -117,8 +117,7 @@ function PanelReservations({ data }: PanelProps) {
           </p>
         </div>
         <div className="rounded-2xl border border-dashed border-neutral-200 p-6 text-sm text-neutral-600 dark:border-zinc-700 dark:text-zinc-400">
-          Forwarding confirmations and inbox sync are on the roadmap; today, structured events power this
-          view.
+          Add flights and stays to any itinerary and they appear here as one tidy timeline.
         </div>
       </div>
     );
@@ -179,14 +178,14 @@ function PanelFlightStatus({ data }: PanelProps) {
           <p className="text-xs font-semibold uppercase tracking-wider text-sky-300">Live status</p>
           <p className="mt-4 text-sm text-slate-300">
             {data.isLoggedIn
-              ? "Add upcoming flights to your story—or include a carrier code + flight number in the title (e.g. AF 007)—to query Aviationstack when AVIATIONSTACK_API_KEY is set."
-              : "Sign in to surface your next flights here. Optional: Aviationstack for live gates and delays."}
+              ? "Add upcoming flights to your story — include the carrier code and flight number in the title (e.g. AF 007) to unlock live tracking."
+              : "Sign in to surface your next flights here, complete with live gates and delays."}
           </p>
         </div>
         <div className="flex flex-col justify-center rounded-2xl border border-neutral-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
           <p className="text-sm text-neutral-600 dark:text-zinc-400">
-            Live lookups are best-effort and respect API quotas; without a key, Itinera still shows your
-            scheduled segments from the database.
+            Live status updates appear when available; your scheduled segments always stay on the
+            timeline either way.
           </p>
         </div>
       </div>
@@ -330,9 +329,8 @@ function PanelDeals({ data }: PanelProps) {
           Deals digest
         </p>
         <p className="mt-2 text-sm text-neutral-700 dark:text-zinc-300">
-          Rows come from the <code className="rounded bg-violet-100 px-1 dark:bg-violet-950">MarketFlightDeal</code>{" "}
-          table (filled by <code className="rounded bg-violet-100 px-1 dark:bg-violet-950">prisma db seed</code>
-          ). Refresh them anytime from your own admin, ETL, or a fare API you choose.
+          A running digest of standout fares and route deals — a quick scan for inspiration before
+          you start planning.
         </p>
         <motion.ul
           className="mt-4 space-y-2"
@@ -381,7 +379,9 @@ function PanelDeals({ data }: PanelProps) {
               </p>
             </>
           ) : (
-            <p className="mt-2 text-sm text-neutral-600 dark:text-zinc-400">No rows yet.</p>
+            <p className="mt-2 text-sm text-neutral-600 dark:text-zinc-400">
+              No deals yet — check back soon.
+            </p>
           )}
         </div>
       </div>
@@ -403,7 +403,7 @@ const TAB_DEFS: FeatureTab[] = [
     label: "Reservations",
     short: "Flights & hotels in one place",
     headline: "Flights and hotels from your timelines",
-    body: "Structured flight and hotel events on your own itineraries power this panel—no mailbox access required yet.",
+    body: "Flight and hotel events from your itineraries are gathered here automatically — one timeline for every booking.",
     Panel: PanelReservations,
   },
   {
@@ -411,7 +411,7 @@ const TAB_DEFS: FeatureTab[] = [
     label: "Flight status",
     short: "Live gates & delays",
     headline: "Track live flight status",
-    body: "We read your next segments from Postgres and optionally enrich them with Aviationstack when a flight number is detectable and AVIATIONSTACK_API_KEY is set.",
+    body: "Your upcoming flights surface here automatically, with live gate and delay updates whenever a flight number is on the itinerary.",
     Panel: PanelFlightStatus,
   },
   {
@@ -425,9 +425,9 @@ const TAB_DEFS: FeatureTab[] = [
   {
     id: "deals",
     label: "Flight deals",
-    short: "Your database",
+    short: "Fares worth a look",
     headline: "Deals backed by data",
-    body: "Seed rows ship with the repo. Amadeus self-service signup is being retired (portal decommission July 2026), so we keep deals as plain Postgres rows you can update or sync from any provider.",
+    body: "A curated digest of fare drops and route deals to spark your next trip — scan the highlights, then build the plan around them.",
     Panel: PanelDeals,
   },
 ];

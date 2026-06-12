@@ -173,9 +173,14 @@ export default async function ProfilePage() {
                   href={`/itineraries/${row.itinerary.slug}`}
                   className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2.5 text-sm transition hover:bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 dark:hover:bg-amber-950/35"
                 >
-                  <span className="text-amber-600 dark:text-amber-400" aria-hidden>
-                    ★
-                  </span>
+                  <svg
+                    className="h-4 w-4 shrink-0 text-amber-500 dark:text-amber-400"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 2.5 15 9l7 .8-5.2 4.7 1.4 6.9L12 17.9 5.8 21.4l1.4-6.9L2 9.8 9 9l3-6.5z" />
+                  </svg>
                   <div className="min-w-0 flex-1">
                     <span className="font-medium text-neutral-900 dark:text-zinc-100">
                       {row.itinerary.title}

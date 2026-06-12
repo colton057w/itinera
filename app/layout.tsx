@@ -50,8 +50,23 @@ export default function RootLayout({
               <nav className="flex items-center gap-6">
                 <Link
                   href="/"
-                  className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-zinc-100"
+                  className="flex items-center gap-2 text-lg font-semibold tracking-tight text-neutral-900 dark:text-zinc-100"
                 >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white dark:bg-emerald-500">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </span>
                   Itinera
                 </Link>
                 <Link
@@ -74,6 +89,41 @@ export default function RootLayout({
             </div>
           </header>
           <main className="flex-1">{children}</main>
+          <footer className="border-t border-neutral-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-zinc-100">
+                  Itinera
+                </p>
+                <p className="mt-1 max-w-sm text-sm text-neutral-500 dark:text-zinc-400">
+                  Plan, share, and clone vacation and wedding itineraries.
+                </p>
+              </div>
+              <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                <Link
+                  href="/"
+                  className="text-neutral-600 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  Explore
+                </Link>
+                <Link
+                  href="/forum"
+                  className="text-neutral-600 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  Forum
+                </Link>
+                <Link
+                  href="/itineraries/new"
+                  className="text-neutral-600 transition-colors hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  New itinerary
+                </Link>
+              </nav>
+              <p className="text-xs text-neutral-400 dark:text-zinc-600">
+                © {new Date().getFullYear()} Itinera
+              </p>
+            </div>
+          </footer>
         </Providers>
         <Script
           id="travelpayouts-drive"

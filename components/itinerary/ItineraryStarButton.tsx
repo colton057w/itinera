@@ -46,9 +46,18 @@ export function ItineraryStarButton({ itineraryId, initialStarred }: Props) {
           : "border-neutral-200 bg-white text-neutral-700 hover:border-amber-300 hover:bg-amber-50/50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-amber-700 dark:hover:bg-amber-950/30"
       }`}
     >
-      <span className="mr-1.5 text-base leading-none" aria-hidden>
-        {starred ? "★" : "☆"}
-      </span>
+      <svg
+        className="mr-1.5 h-4 w-4"
+        viewBox="0 0 24 24"
+        fill={starred ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M12 2.5 15 9l7 .8-5.2 4.7 1.4 6.9L12 17.9 5.8 21.4l1.4-6.9L2 9.8 9 9l3-6.5z" />
+      </svg>
       {starred ? "Starred" : "Star"}
     </button>
   );

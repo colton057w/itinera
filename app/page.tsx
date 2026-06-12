@@ -145,11 +145,11 @@ export default async function Home({
 
   return (
     <div className="relative overflow-hidden">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(251,146,60,0.18),_transparent_36%),linear-gradient(to_bottom,_rgba(255,255,255,0.98),_rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.14),_transparent_34%),linear-gradient(to_bottom,_rgba(9,9,11,1),_rgba(9,9,11,0))]" />
+      <div className="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.16),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(251,191,36,0.16),_transparent_36%),linear-gradient(to_bottom,_rgba(255,255,255,0.98),_rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(52,211,153,0.14),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(251,191,36,0.1),_transparent_34%),linear-gradient(to_bottom,_rgba(9,9,11,1),_rgba(9,9,11,0))]" />
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-10 sm:pt-14">
         <section className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/85 px-3 py-1 text-xs font-medium text-sky-700 shadow-sm backdrop-blur dark:border-sky-900 dark:bg-zinc-900/80 dark:text-sky-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white/85 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm backdrop-blur dark:border-emerald-900 dark:bg-zinc-900/80 dark:text-emerald-300">
               All-in-one trip planning
             </div>
             <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight text-balance text-neutral-950 sm:text-6xl dark:text-white">
@@ -191,13 +191,13 @@ export default async function Home({
           </div>
 
           <div className="relative">
-            <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-sky-300/25 blur-3xl dark:bg-sky-500/20" />
-            <div className="absolute -right-6 bottom-8 h-40 w-40 rounded-full bg-orange-300/25 blur-3xl dark:bg-orange-500/20" />
+            <div className="absolute -left-8 top-10 h-36 w-36 rounded-full bg-emerald-300/25 blur-3xl dark:bg-emerald-500/20" />
+            <div className="absolute -right-6 bottom-8 h-40 w-40 rounded-full bg-amber-300/25 blur-3xl dark:bg-amber-500/20" />
             <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/85">
               <div className="rounded-[1.6rem] border border-neutral-200 bg-neutral-50 p-4 dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="flex items-center justify-between gap-4 border-b border-neutral-200 pb-4 dark:border-zinc-800">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-600 dark:text-sky-400">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
                       Trip workspace
                     </p>
                     <h2 className="mt-2 text-xl font-semibold text-neutral-950 dark:text-white">
@@ -229,7 +229,7 @@ export default async function Home({
                           {stop.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="rounded-full bg-sky-50 px-2 py-1 text-[10px] font-medium text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                              className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
                             >
                               {tag}
                             </span>
@@ -239,7 +239,7 @@ export default async function Home({
                     ))}
                   </div>
 
-                  <div className="rounded-[1.4rem] border border-neutral-200 bg-[linear-gradient(145deg,#eff6ff,#ffffff_42%,#fff7ed)] p-4 dark:border-zinc-800 dark:bg-[linear-gradient(145deg,rgba(12,74,110,0.34),rgba(9,9,11,0.95)_42%,rgba(124,45,18,0.28))]">
+                  <div className="rounded-[1.4rem] border border-neutral-200 bg-[linear-gradient(145deg,#ecfdf5,#ffffff_42%,#fffbeb)] p-4 dark:border-zinc-800 dark:bg-[linear-gradient(145deg,rgba(6,78,59,0.34),rgba(9,9,11,0.95)_42%,rgba(120,53,15,0.28))]">
                     <div className="grid grid-cols-[1.3fr_0.7fr] gap-3">
                       <div className="rounded-3xl border border-white/80 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900/80">
                         <div className="flex items-center justify-between">
@@ -313,7 +313,7 @@ export default async function Home({
                 key={card.title}
                 className="rounded-[1.8rem] border border-neutral-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
               >
-                <span className="text-sm font-semibold text-sky-600 dark:text-sky-400">
+                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                   0{index + 1}
                 </span>
                 <h3 className="mt-3 text-xl font-semibold text-neutral-950 dark:text-white">
@@ -342,8 +342,8 @@ export default async function Home({
                 Browse itineraries the way a planner actually searches.
               </h2>
               <p className="mt-3 max-w-xl text-base leading-7 text-neutral-600 dark:text-zinc-400">
-                Filter by trip type, location, vibe, and duration. Keep the Wanderlog-style discovery
-                feeling, but centered on the itineraries your community already shares.
+                Filter by trip type, location, vibe, and duration to find real plans from real
+                travelers — then clone the ones you love and make them your own.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {(popularTags.length > 0
@@ -388,7 +388,7 @@ export default async function Home({
                     name="vibe"
                     defaultValue={vibe}
                     placeholder="luxury, backpacking..."
-                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-sky-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
@@ -399,7 +399,7 @@ export default async function Home({
                     name="location"
                     defaultValue={location}
                     placeholder="Italy, Napa..."
-                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-sky-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
@@ -411,7 +411,7 @@ export default async function Home({
                     defaultValue={sp.durationMin}
                     type="number"
                     min={1}
-                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-sky-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
@@ -423,7 +423,7 @@ export default async function Home({
                     defaultValue={sp.durationMax}
                     type="number"
                     min={1}
-                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-sky-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                    className="rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                   />
                 </label>
               </div>

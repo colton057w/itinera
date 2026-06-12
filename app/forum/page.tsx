@@ -45,7 +45,7 @@ export default async function ForumPage() {
           Forum
         </h1>
         <p className="mt-2 text-neutral-600 dark:text-zinc-400">
-          Ask questions, share tips, and chat like a subreddit—one list of threads, newest first.
+          Ask questions, share tips, and swap travel stories — one list of threads, newest first.
         </p>
       </div>
 

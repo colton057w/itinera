@@ -12,7 +12,12 @@ export function NavAuth() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <span className="text-sm text-neutral-500 dark:text-zinc-500">…</span>;
+    return (
+      <span
+        className="inline-block h-8 w-24 animate-pulse rounded-full bg-neutral-200/80 dark:bg-zinc-800"
+        aria-hidden
+      />
+    );
   }
 
   if (!session) {
@@ -52,35 +57,42 @@ export function NavAuth() {
           )}
           {isAdmin ? (
             <span
-              className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[10px] leading-none shadow dark:bg-amber-900/90 sm:hidden"
+              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500 dark:border-zinc-950 sm:hidden"
               title="Admin"
               aria-label="Admin"
-            >
-              👑
-            </span>
+            />
           ) : null}
         </span>
         <span className="hidden max-w-[9rem] truncate text-sm font-medium text-neutral-800 dark:text-zinc-200 sm:inline">
-          {isAdmin ? (
-            <span className="mr-1 inline-block text-amber-600 dark:text-amber-400" title="Admin" aria-label="Admin">
-              👑
-            </span>
-          ) : null}
           {display}
         </span>
-        <span className="text-neutral-400 group-open:rotate-180 dark:text-zinc-500" aria-hidden>
-          ▾
-        </span>
+        {isAdmin ? (
+          <span className="hidden rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 sm:inline">
+            Admin
+          </span>
+        ) : null}
+        <svg
+          className="h-3.5 w-3.5 text-neutral-400 transition-transform group-open:rotate-180 dark:text-zinc-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </summary>
       <div className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-neutral-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
         <div className="border-b border-neutral-100 px-3 py-2 dark:border-zinc-800">
-          <p className="truncate text-sm font-medium text-neutral-900 dark:text-zinc-100">
+          <p className="flex items-center gap-1.5 truncate text-sm font-medium text-neutral-900 dark:text-zinc-100">
+            <span className="truncate">{display}</span>
             {isAdmin ? (
-              <span className="mr-1 text-amber-600 dark:text-amber-400" title="Admin" aria-label="Admin">
-                👑
+              <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                Admin
               </span>
             ) : null}
-            {display}
           </p>
           {email ? (
             <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-zinc-400">{email}</p>

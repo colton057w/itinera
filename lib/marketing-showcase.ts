@@ -203,18 +203,20 @@ export async function loadMarketingShowcase(userId: string | null): Promise<Mark
             : [ev.departureAirportCode, ev.arrivalAirportCode].filter(Boolean).join(" → ") ||
               (ev.location?.trim() || "Flight");
         return {
-          kind: ev.type === "HOTEL" ? ("hotel" as const) : ("flight" as const),
-          title: ev.title,
-          tripTitle: trip.title,
-          tripSlug: trip.slug,
-          whenLabel,
-          detail,
           sortAt,
+          item: {
+            kind: ev.type === "HOTEL" ? ("hotel" as const) : ("flight" as const),
+            title: ev.title,
+            tripTitle: trip.title,
+            tripSlug: trip.slug,
+            whenLabel,
+            detail,
+          },
         };
       })
       .sort((a, b) => a.sortAt - b.sortAt)
       .slice(0, 8)
-      .map(({ sortAt: _s, ...rest }) => rest);
+      .map((entry) => entry.item);
 
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;

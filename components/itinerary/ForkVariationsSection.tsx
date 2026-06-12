@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Variation = {
   id: string;
@@ -14,12 +14,14 @@ type Variation = {
 export function ForkVariationsSection({ itineraryId }: { itineraryId: string }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Variation[] | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open || items !== null) return;
-    setLoading(true);
+  const loading = open && items === null && error === null;
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (!next || items !== null) return;
     setError(null);
     void fetch(`/api/itineraries/${itineraryId}/variations`)
       .then(async (res) => {
@@ -27,9 +29,8 @@ export function ForkVariationsSection({ itineraryId }: { itineraryId: string }) 
         const data = (await res.json()) as { variations: Variation[] };
         setItems(data.variations);
       })
-      .catch(() => setError("Something went wrong"))
-      .finally(() => setLoading(false));
-  }, [open, items, itineraryId]);
+      .catch(() => setError("Something went wrong"));
+  }
 
   return (
     <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
@@ -39,7 +40,7 @@ export function ForkVariationsSection({ itineraryId }: { itineraryId: string }) 
         </p>
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={toggle}
           className="text-xs font-semibold text-emerald-800 hover:underline dark:text-emerald-400"
         >
           {open ? "Hide" : "View variations"}

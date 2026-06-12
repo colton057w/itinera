@@ -8,7 +8,10 @@ export function ItineraryGoogleMap({ apiKey }: { apiKey: string }) {
   const { points, focusEvent, setMapInstance } = useItineraryMap();
   const elRef = useRef<HTMLDivElement>(null);
   const focusRef = useRef(focusEvent);
-  focusRef.current = focusEvent;
+
+  useEffect(() => {
+    focusRef.current = focusEvent;
+  }, [focusEvent]);
 
   const pointsKey = points.map((p) => `${p.id}:${p.lat},${p.lng}`).join("|");
 

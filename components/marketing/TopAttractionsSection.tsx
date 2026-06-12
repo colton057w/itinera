@@ -7,22 +7,22 @@ export function TopAttractionsSection({ attractions }: { attractions: CuratedAtt
     <section className="mt-20 pb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400">
             Top attractions
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-950 dark:text-white">
             Iconic places — jump into a full city guide
           </h2>
           <p className="mt-2 text-base leading-7 text-neutral-600 dark:text-zinc-400">
-            Rows are stored in Postgres and ordered with the seed script—swap images or titles anytime via
-            your own admin or migrations.
+            The landmarks travelers plan whole trips around. Each one links to a city guide full of
+            experiences you can add to your own itinerary.
           </p>
         </div>
         <Link
           href="#discover"
           className="shrink-0 text-sm font-semibold text-neutral-700 underline-offset-4 hover:underline dark:text-zinc-300"
         >
-          Or browse community itineraries ↑
+          Or browse community itineraries
         </Link>
       </div>
 

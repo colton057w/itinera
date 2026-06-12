@@ -12,11 +12,12 @@ import { StoryEventCard } from "./StoryEventCard";
 import type { DayDraft, EventDraft, StoryKind } from "./types";
 import { createQuickEvent, newId } from "./types";
 
-const QUICK_ADD: { kind: StoryKind; label: string; emoji: string }[] = [
-  { kind: "stay", label: "Stay", emoji: "🏨" },
-  { kind: "meal", label: "Meal", emoji: "🍽" },
-  { kind: "transit", label: "Transit", emoji: "🚆" },
-  { kind: "activity", label: "Activity", emoji: "✨" },
+const QUICK_ADD: { kind: StoryKind; label: string; iconPath: string }[] = [
+  // 24x24 stroke paths: bed, utensils, train, sparkle
+  { kind: "stay", label: "Stay", iconPath: "M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6M2 18h20M2 18v2M22 18v2M6 10V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3" },
+  { kind: "meal", label: "Meal", iconPath: "M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M17 3c-1.7 0-3 2-3 5s1.3 4 3 4v9M17 3v18" },
+  { kind: "transit", label: "Transit", iconPath: "M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 18l-2 3M16 18l2 3M9 15h.01M15 15h.01" },
+  { kind: "activity", label: "Activity", iconPath: "M12 3v3M12 18v3M3 12h3M18 12h3M12 8.5 13.4 11l2.6 1-2.6 1L12 15.5 10.6 13 8 12l2.6-1L12 8.5z" },
 ];
 
 export type StorybookBuilderProps = {
@@ -278,9 +279,18 @@ export function StorybookBuilder({
                 onClick={() => quickAddEvent(day.clientId, q.kind)}
                 className="flex flex-col items-center gap-0.5 rounded-lg border border-transparent bg-white px-2 py-2 text-xs font-medium text-neutral-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/80 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
               >
-                <span className="text-lg leading-none" aria-hidden>
-                  {q.emoji}
-                </span>
+                <svg
+                  className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d={q.iconPath} />
+                </svg>
                 {q.label}
               </button>
             ))}

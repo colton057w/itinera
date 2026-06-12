@@ -58,6 +58,7 @@ export function AirportCombobox({ label, code, name, onChange }: Props) {
           setOpen(true);
           setQuery(code);
         }}
+        role="combobox"
         aria-autocomplete="list"
         aria-controls={listId}
         aria-expanded={open}
@@ -82,6 +83,7 @@ export function AirportCombobox({ label, code, name, onChange }: Props) {
               <button
                 type="button"
                 role="option"
+                aria-selected={a.code === code}
                 className="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-zinc-800"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(a)}

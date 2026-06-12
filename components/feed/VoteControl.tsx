@@ -38,14 +38,26 @@ export function VoteControl({ itineraryId, initialScore, initialMyVote }: Props)
       <button
         type="button"
         aria-label="Upvote"
-        className={`rounded px-2 py-0.5 text-sm font-bold ${
+        aria-pressed={myVote === 1}
+        className={`rounded px-2 py-0.5 transition-colors ${
           myVote === 1
             ? "text-orange-600 dark:text-orange-400"
             : "text-neutral-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400"
         }`}
         onClick={() => void send(myVote === 1 ? 0 : 1)}
       >
-        ▲
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill={myVote === 1 ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="m5 14 7-8 7 8H5z" />
+        </svg>
       </button>
       <span className="text-xs font-semibold tabular-nums text-neutral-800 dark:text-zinc-200">
         {score}
@@ -53,14 +65,26 @@ export function VoteControl({ itineraryId, initialScore, initialMyVote }: Props)
       <button
         type="button"
         aria-label="Downvote"
-        className={`rounded px-2 py-0.5 text-sm font-bold ${
+        aria-pressed={myVote === -1}
+        className={`rounded px-2 py-0.5 transition-colors ${
           myVote === -1
             ? "text-indigo-600 dark:text-indigo-400"
             : "text-neutral-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
         }`}
         onClick={() => void send(myVote === -1 ? 0 : -1)}
       >
-        ▼
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill={myVote === -1 ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="m5 10 7 8 7-8H5z" />
+        </svg>
       </button>
     </div>
   );
