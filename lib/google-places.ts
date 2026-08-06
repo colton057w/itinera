@@ -11,6 +11,7 @@ export type PlaceDetailsResult = {
   googleMapsUrl: string | null;
   lat: number | null;
   lng: number | null;
+  coverPhotoUrl: string | null;
 };
 
 function placesKey(): string | null {
@@ -87,7 +88,7 @@ export async function fetchPlaceDetails(
 
   const u = new URL("https://maps.googleapis.com/maps/api/place/details/json");
   u.searchParams.set("place_id", placeId);
-  u.searchParams.set("fields", "name,formatted_address,geometry,website,url");
+  u.searchParams.set("fields", "name,formatted_address,geometry,website,url,photos");
   u.searchParams.set("key", key);
 
   const res = await fetch(u.toString());
@@ -98,6 +99,7 @@ export async function fetchPlaceDetails(
       formatted_address?: string;
       website?: string;
       url?: string;
+      photos?: Array<{ photo_reference?: string }>;
       geometry?: { location?: { lat: number; lng: number } };
     };
     error_message?: string;
@@ -110,6 +112,7 @@ export async function fetchPlaceDetails(
 
   const r = data.result;
   const loc = r.geometry?.location;
+  const photoRef = r.photos?.[0]?.photo_reference?.trim() || null;
   return {
     name: r.name ?? "",
     formattedAddress: r.formatted_address ?? "",
@@ -117,5 +120,6 @@ export async function fetchPlaceDetails(
     googleMapsUrl: r.url ?? null,
     lat: loc?.lat ?? null,
     lng: loc?.lng ?? null,
+    coverPhotoUrl: photoRef ? `/api/places/photo?ref=${encodeURIComponent(photoRef)}` : null,
   };
 }
